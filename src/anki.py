@@ -47,3 +47,13 @@ def retrieve_words(deck_name = None, query = None, field = None):
         words.append(word)
     
     return words
+
+
+if __name__ == "__main__":
+    deck_name = settings.deck_name
+    query = settings.query
+    field = settings.field
+    
+    # retrieve words
+    words = retrieve_words(deck_name=deck_name, query=query, field=field)
+    print(words)

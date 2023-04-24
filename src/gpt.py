@@ -49,6 +49,9 @@ def make_edge_tts_mp3(text, trans_lang, filename):
 
 
 if __name__ == "__main__":
+    import os
+    if not os.path.exists("output"):
+        os.makedirs("output")
     # retrieve words
     words = retrieve_words(deck_name=deck_name, query=query, field=field)
     article = call_openai_to_make_article(words, language=article_lang)

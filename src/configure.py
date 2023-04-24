@@ -274,7 +274,7 @@ EDGE_TTS_DICT = {
 class Settings(BaseSettings):
     # Anki Settings
     deck_name : str = "current"
-    query : str = f'"deck:{deck_name}" introduced:1'
+    query : str = None
     field : str = None
     anki_connect_host : str = "http://localhost"
     anki_connect_port : int = 8765
@@ -292,7 +292,8 @@ class Settings(BaseSettings):
     @validator('query')
     def query_validator(cls, query, values):
         deck_name = values.get('deck_name', "current")
-        query = f'"deck:{deck_name}" introduced:1'
+        if not query:
+            query = f'"deck:{deck_name}" introduced:1'
         return query
 
 
