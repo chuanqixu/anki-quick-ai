@@ -1,5 +1,6 @@
 import json
 import urllib.request
+from configure import settings
 
 
 
@@ -8,7 +9,8 @@ def request(action, **params):
 
 def invoke(action, **params):
     requestJson = json.dumps(request(action, **params)).encode('utf-8')
-    response = json.load(urllib.request.urlopen(urllib.request.Request('http://localhost:8765', requestJson)))
+    url = settings.anki_connect_host + f":{settings.anki_connect_port}"
+    response = json.load(urllib.request.urlopen(urllib.request.Request(url, requestJson)))
     if len(response) != 2:
         raise ValueError('response has an unexpected number of fields')
     if 'error' not in response:

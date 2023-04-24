@@ -276,6 +276,8 @@ class Settings(BaseSettings):
     deck_name : str = "current"
     query : str = f'"deck:{deck_name}" introduced:1'
     field : str = None
+    anki_connect_host : str = "http://localhost"
+    anki_connect_port : int = 8765
 
     # GPT Settings
     api_key : str
