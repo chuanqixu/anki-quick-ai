@@ -1,6 +1,7 @@
 requests
 openai
 edge-tts
+playsound
 langcodes
 language_data
 pydantic
