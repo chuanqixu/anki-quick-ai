@@ -33,7 +33,7 @@ def retrieve_words(deck_name = None, query = None, field = None):
     # # Send a request to get the note for each card ID
     words = []
     for card_info in cards_info:
-        if field:
+        if field != "":
             word = card_info["fields"][field]["value"]
         else:
             # if field is not specified, default is the first field
