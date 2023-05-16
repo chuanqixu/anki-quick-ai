@@ -5,3 +5,4 @@ playsound
 langcodes
 language_data
 pydantic
+requests_html
