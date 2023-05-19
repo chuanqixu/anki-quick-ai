@@ -1,5 +1,4 @@
 from .configure import settings, PROMPT, PROMPT_TRANS, EDGE_TTS_DICT
-from .anki_local import retrieve_words
 
 import openai
 import edge_tts

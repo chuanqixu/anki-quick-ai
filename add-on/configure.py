@@ -273,8 +273,8 @@ EDGE_TTS_DICT = {
 
 class Settings(BaseSettings):
     # Anki Settings
-    email : str
-    password : str
+    email : str = ""
+    password : str = ""
     deck_name : str = "current"
     query : str = None
     field : str = None
