@@ -1,10 +1,10 @@
 from configure import settings, PROMPT, PROMPT_TRANS, EDGE_TTS_DICT
-from anki import retrieve_words
+from anki_local import retrieve_words
 
 import openai
 import edge_tts
 import playsound
-import langcodes
+import iso639
 import random, asyncio
 
 # Anki settings
@@ -42,7 +42,7 @@ def make_edge_tts_mp3(text, trans_lang, filename):
     """
     TODO Refactor this shit
     """
-    langcode = langcodes.find(trans_lang).language
+    langcode = iso639.to_iso639_1(trans_lang)
     voice = random.choice(EDGE_TTS_DICT.get(langcode))
     communicate = edge_tts.Communicate(text, voice)
     return asyncio.run(communicate.save(filename))

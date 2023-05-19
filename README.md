@@ -26,7 +26,7 @@ One example:
     
     2. Input your settings. Delete all empty variables, which will be replaced with default values in the `src/configure.py`.
 
-4. Run the program:
+4. Run the program. Make sure Anki is running for Anki-Connection:
 
     ```
     python src/gpt.py

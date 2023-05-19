@@ -2,7 +2,11 @@ requests
 openai
 edge-tts
 playsound
-langcodes
-language_data
+iso639
+python-dotenv
 pydantic
 requests_html
+
+# anki addon requirements
+aqt[qt6]
+anki
