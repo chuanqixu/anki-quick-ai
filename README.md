@@ -6,7 +6,18 @@ One example:
 
 ![Example](./asset/example.png)
 
-# Usage
+
+# Anki Add-On (Developing)
+
+[add-on/lib] contains third-party libraries that are not supported by Anki. Currently, Anki add-ons require third-party libraries to be bundled with the source code.
+
+(Optionally) Update third-party libraries:
+```bash
+cd add-on
+pip install -r requirements.txt --target lib
+```
+
+# Local Usage
 
 1. The program is connected with Anki through [Anki-Connect](https://github.com/FooSoft/anki-connect). First, install Anki-Connect add-on for your Anki.
 

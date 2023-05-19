@@ -1,0 +1,7 @@
+openai
+edge-tts
+playsound
+iso639
+python-dotenv
+pydantic
+# requests_html
