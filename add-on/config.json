@@ -1,0 +1,11 @@
+{
+    "query": "\"deck:current\" introduced:1",
+    "article_language": "Chinese",
+    "trans_language": "English", 
+
+    "api_key": "",
+    "model": "gpt-3.5-turbo",
+
+    "prompt": "Please write a short story in {language} which is less than 300 words, the story should use simple words and these special words must be included: {words}.",
+    "prompt_translation": "Translate the given text to {language}. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. f the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n{text}"
+}

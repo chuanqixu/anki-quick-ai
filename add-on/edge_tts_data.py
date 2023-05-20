@@ -1,9 +1,3 @@
-from pydantic import BaseSettings, validator
-import os
-
-PROMPT = "Please write a short story in {language} which is less than 300 words, the story should use simple words and these special words must be included: ${words}."
-PROMPT_TRANS = "Translate the given text to {language}. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. f the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n{text}"
-
 EDGE_TTS_DICT = {
     "af": ["af-ZA-AdriNeural", "af-ZA-WillemNeural"],
     "am": ["am-ET-AmehaNeural", "am-ET-MekdesNeural"],
@@ -268,35 +262,3 @@ EDGE_TTS_DICT = {
     ],
     "zu": ["zu-ZA-ThandoNeural", "zu-ZA-ThembaNeural"],
 }
-
-
-
-class Settings(BaseSettings):
-    # Anki Settings
-    email : str = ""
-    password : str = ""
-    deck_name : str = "current"
-    query : str = None
-    field : str = None
-    anki_connect_host : str = "http://localhost"
-    anki_connect_port : int = 8765
-
-    # GPT Settings
-    api_key : str = ""
-    article_lang : str = "Chinese"
-    trans_lang : str = "English"
-    model : str = "gpt-3.5-turbo"
-
-    class Config:
-        env_file = os.path.join(os.path.dirname(__file__), '.env')
-        # env_file =".env"
-    
-    @validator('query')
-    def query_validator(cls, query, values):
-        deck_name = values.get('deck_name', "current")
-        if not query:
-            query = f'"deck:{deck_name}" introduced:1'
-        return query
-
-
-settings = Settings()

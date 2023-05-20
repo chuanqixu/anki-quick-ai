@@ -1,4 +1,4 @@
-from .configure import settings, PROMPT, PROMPT_TRANS, EDGE_TTS_DICT
+from .edge_tts_data import EDGE_TTS_DICT
 
 import openai
 import edge_tts
@@ -6,36 +6,15 @@ import playsound
 from iso639 import to_iso639_1
 import random, asyncio
 
-# Anki settings
-deck_name = settings.deck_name
-query = settings.query
-field = settings.field
-
-# GPT settings
-openai.api_key = settings.api_key
-article_lang = settings.article_lang
-trans_lang = settings.trans_lang
-model = settings.model
 
 
-
-def call_openai_to_make_article(words, language):
-    prompt = PROMPT.format(language=language, words=words)
+def call_openai(prompt, model):
     completion = openai.ChatCompletion.create(
-
-        model=model,
+        model = model,
         messages=[{"role": "user", "content": prompt}],
     )
     return completion["choices"][0]["message"]["content"].encode("utf8").decode()
 
-
-def call_openai_to_make_trans(text, language):
-    prompt = PROMPT_TRANS.format(text=text, language=language)
-    completion = openai.ChatCompletion.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return completion["choices"][0]["message"]["content"].encode("utf8").decode()
 
 
 # def make_edge_tts_mp3(text, trans_lang, filename):

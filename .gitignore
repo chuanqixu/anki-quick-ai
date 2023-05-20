@@ -3,3 +3,4 @@ __pycache__/
 output/*
 .env
 .mypy**
+meta.json
