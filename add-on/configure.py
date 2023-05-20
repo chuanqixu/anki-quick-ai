@@ -282,7 +282,7 @@ class Settings(BaseSettings):
     anki_connect_port : int = 8765
 
     # GPT Settings
-    api_key : str
+    api_key : str = ""
     article_lang : str = "Chinese"
     trans_lang : str = "English"
     model : str = "gpt-3.5-turbo"
