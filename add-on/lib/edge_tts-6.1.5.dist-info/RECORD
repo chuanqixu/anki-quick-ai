@@ -1,5 +1,5 @@
-../../bin/edge-playback.exe,sha256=hXFs82F11fTb4uHFkLc0X7R7RBEcT8kOkTiqtMliIvo,108405
-../../bin/edge-tts.exe,sha256=mYENQeRhxypG7lx6QOHsJ62ZzqaYjGzkkwRrTx44t7o,108398
+../../bin/edge-playback.exe,sha256=IwRYd_5wDxyK5w-wE6Uvpc5YBbWRIsgtmqdYjSpC0eY,108405
+../../bin/edge-tts.exe,sha256=cwR0KcZ4ziAa0m_BapnMqHpejTABawgrNVlp-TRSooI,108398
 edge_playback/__init__.py,sha256=CnAJ3kU9AntnHsip9VxT5OjUm-ttZ_CId2_8TJHZsKw,109
 edge_playback/__main__.py,sha256=YpSEt3L2QG8AtKAIOyDaiOoQSNiK0qT6vS2fBRmH3Rw,2053
 edge_playback/__pycache__/__init__.cpython-310.pyc,,

@@ -2,7 +2,6 @@ from .edge_tts_data import EDGE_TTS_DICT
 
 import openai
 import edge_tts
-import playsound
 from iso639 import to_iso639_1
 import random, asyncio
 
@@ -17,15 +16,15 @@ def call_openai(prompt, model):
 
 
 
-# def make_edge_tts_mp3(text, trans_lang, filename):
-#     """
-#     TODO Refactor this shit
-#     """
-#     # langcode = langcodes.find(trans_lang).language
-#     langcode = to_iso639_1(trans_lang)
-#     voice = random.choice(EDGE_TTS_DICT.get(langcode))
-#     communicate = edge_tts.Communicate(text, voice)
-#     return asyncio.run(communicate.save(filename))
+def make_edge_tts_mp3(text, trans_lang, filename):
+    """
+    TODO Refactor this shit
+    """
+    # langcode = langcodes.find(trans_lang).language
+    langcode = to_iso639_1(trans_lang)
+    voice = random.choice(EDGE_TTS_DICT.get(langcode))
+    communicate = edge_tts.Communicate(text, voice)
+    return asyncio.run(communicate.save(filename))
 
 
 if __name__ == "__main__":

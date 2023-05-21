@@ -2,7 +2,7 @@
 
 Retrieve words studied today in Anki, and send them to ChatGPT to asks it make a story using these words. Print the story and generate the audio files.
 
-One example:
+One example for local usage:
 
 ![Example](./asset/example.png)
 
@@ -23,7 +23,7 @@ pip install -r requirements.txt --target lib
 
 ### Usage
 
-Click the `Tools` button on the menu bar in the main Anki window, and then click `AI Words Story`. Wait for seconds for AI generation and transmission between OpenAI and your local machine.
+Click the `Tools` button on the menu bar in the main Anki window, and then click `AI Words Story`. Wait for seconds for AI generation and transmission between OpenAI and your local machine. If you also generate the sound, then it may take another seconds for sound generation.
 
 
 ## Local Usage

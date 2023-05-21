@@ -1,7 +1,4 @@
 openai
 edge-tts
-playsound
+playsound==1.2.2
 iso639
-python-dotenv
-pydantic
-# requests_html
