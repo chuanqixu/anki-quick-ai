@@ -1,5 +1,7 @@
 {
     "query": "\"deck:current\" introduced:1",
+    "note_field": "Front",
+
     "article_language": "Chinese",
     "trans_language": "English", 
 

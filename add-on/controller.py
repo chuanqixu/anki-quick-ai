@@ -17,6 +17,7 @@ def _get_story_from_ai(browse_cmd):
     model = config["model"]
 
     words = get_words(browse_cmd)
+
     prompt = config["prompt"].format(language=article_lang, words=words)
     article = call_openai(prompt,  model)
     # make_edge_tts_mp3(article, article_lang, "output/article.mp3")
