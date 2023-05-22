@@ -14,5 +14,7 @@
         "English"
     ],
 
-    "play_sound": true
+    "play_sound": true,
+
+    "automatic_display": true
 }

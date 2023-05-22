@@ -9,6 +9,8 @@ from .controller import gen_response, choose_running_add_on
 
 
 
+config = mw.addonManager.getConfig(__name__)
+
 # create a new menu item, "test"
 action = QAction("Anki Quick AI", mw)
 # set it to call testFunction when it's clicked
@@ -18,5 +20,6 @@ qconnect(action.triggered, choose_running_add_on)
 mw.form.menuTools.addAction(action)
 
 
-# hook for end of the deck
-gui_hooks.reviewer_will_end.append(choose_running_add_on)
+if config["automatic_display"]:
+    # hook for end of the deck
+    gui_hooks.reviewer_will_end.append(choose_running_add_on)
