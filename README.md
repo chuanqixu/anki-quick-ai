@@ -17,6 +17,8 @@ The process is:
 
 # Usage
 
+You can use both Anki add-on or Python locally (Local version is not maintained now).
+
 ## Anki Add-On (Developing)
 
 ### Install
@@ -26,16 +28,6 @@ It has been submitted to Anki add-ons [Anki Quick AI](https://ankiweb.net/shared
 To install it, click "Tools->Add-ons->Get Add-ons". In the Code section, input **547821970**, and then click OK.
 
 [Anki]
-
-### Setup (Optional)
-
-[add-on/lib](add-on/lib/) contains third-party libraries that are not supported by Anki. Currently, Anki add-ons require third-party libraries to be bundled with the source code.
-
-Update third-party libraries:
-```bash
-cd add-on
-pip install -r requirements.txt --target lib
-```
 
 ### Settings
 
@@ -57,6 +49,16 @@ Double click "Tools->Add-ons->Anki Quick AI", and a config page with json data f
 
 Click the `Tools->` button on the menu bar in the main Anki window, and then click `AI Quick AI`. Wait for seconds for AI generation and transmission between OpenAI and your local machine. If you also generate the sound, then it may take another seconds for sound generation.
 
+
+### Setup (Optional)
+
+[add-on/lib](add-on/lib/) contains third-party libraries that are not supported by Anki. Currently, Anki add-ons require third-party libraries to be bundled with the source code.
+
+Update third-party libraries:
+```bash
+cd add-on
+pip install -r requirements.txt --target lib
+```
 
 ## Local Usage
 
