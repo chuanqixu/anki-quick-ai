@@ -13,7 +13,7 @@ The process is:
 
 1. Words story: Retrieve words studied today in Anki, and send them to OpenAI to asks it make a story using these words. Print the story and generate the audio files.
 
-
+https://github.com/chuanqixu/anki-quick-ai/assets/33219261/a383cd74-e915-489c-adcb-a770cf8dd2ba
 
 # Usage
 
@@ -26,8 +26,6 @@ You can use both Anki add-on or Python locally (Local version is not maintained 
 It has been submitted to Anki add-ons [Anki Quick AI](https://ankiweb.net/shared/info/547821970). The code is **547821970**.
 
 To install it, click "Tools->Add-ons->Get Add-ons". In the Code section, input **547821970**, and then click OK.
-
-[Anki]
 
 ### Settings
 
