@@ -8,7 +8,7 @@ Quick interaction with OpenAI in Anki.
 
 1. Words story: Retrieve words studied today in Anki, and send them to OpenAI to asks it make a story using these words. Print the story and generate the audio files.
 
-https://github.com/chuanqixu/anki-quick-au/tree/main/asset/example_words_story.mp4
+https://github.com/chuanqixu/anki-quick-ai/tree/main/asset/example_words_story.mp4
 
 
 # Usage
