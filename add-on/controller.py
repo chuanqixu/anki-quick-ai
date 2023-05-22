@@ -28,7 +28,7 @@ class AIThread(threading.Thread):
     def run(self):
         self.field_value_list = get_note_field_value_list(self.browse_cmd)
 
-        prompt = self.prompt_list[0].format(language=self.language_list[0], value_list=self.field_value_list)
+        prompt = self.prompt_list[0].format(language=self.language_list[0], response=self.field_value_list)
         response = call_openai(prompt, self.model)
         self.response_list.append(response)
 
@@ -62,7 +62,7 @@ class ChooseWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        label = QLabel("Whether to run the add-on \"Anki AI Conversation\"?\nIt may take seconds for AI to generate contents, and another seconds for sound generation.")
+        label = QLabel("Whether to run the add-on \"Anki Quick AI\"?\nIt may take seconds for AI to generate contents, and another seconds for sound generation.")
         layout.addWidget(label)
 
         run_button = QPushButton("Run")
