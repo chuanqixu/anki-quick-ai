@@ -14,12 +14,13 @@ from .gpt import call_openai, make_edge_tts_mp3
 
 
 class AIThread(threading.Thread):
-    def __init__(self, api_key, model, browse_cmd, prompt_list):
+    def __init__(self, api_key, model, browse_cmd, prompt_list, language_list):
         super().__init__()
         openai.api_key = api_key
         self.model = model
         self.browse_cmd = browse_cmd
         self.prompt_list = prompt_list
+        self.language_list = language_list
         self.field_value_list = None
         self.response_list = []
         self.daemon = True  # Set the thread as daemon
@@ -27,28 +28,28 @@ class AIThread(threading.Thread):
     def run(self):
         self.field_value_list = get_note_field_value_list(self.browse_cmd)
 
-        prompt = self.prompt_list[0].format(value_list=self.field_value_list)
+        prompt = self.prompt_list[0].format(language=self.language_list[0], value_list=self.field_value_list)
         response = call_openai(prompt, self.model)
         self.response_list.append(response)
 
         for i in range(1, len(self.prompt_list)):
-            prompt = self.prompt_list[i].format(response=response)
+            prompt = self.prompt_list[i].format(language=self.language_list[i], response=response)
             response = call_openai(prompt, self.model)
             self.response_list.append(response)
 
 
 class SoundThread(threading.Thread):
-    def __init__(self, response_list, sound_language_list):
+    def __init__(self, response_list, language_list):
         super().__init__()
         self.response_list = response_list
-        self.sound_language_list = sound_language_list
+        self.language_list = language_list
         self.daemon = True  # Set the thread as daemon
 
     def run(self):
         if not os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
             os.makedirs(os.path.join(os.path.dirname(__file__), "output"))
         for i in range(len(self.response_list)):
-            make_edge_tts_mp3(self.response_list[i], self.sound_language_list[i], os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"))
+            make_edge_tts_mp3(self.response_list[i], self.language_list[i], os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"))
             playsound.playsound(os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"))
 
 
@@ -61,7 +62,7 @@ class ChooseWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        label = QLabel("Whether to run the add-on \"Anki AI Conversation\"?\nIt may takes seconds for AI to generate contents, and another seconds for sound generation.")
+        label = QLabel("Whether to run the add-on \"Anki AI Conversation\"?\nIt may take seconds for AI to generate contents, and another seconds for sound generation.")
         layout.addWidget(label)
 
         run_button = QPushButton("Run")
@@ -93,10 +94,10 @@ def show_response(field_value_list, prompt_list, response_list):
     showInfo(text)
 
 
-def show_response_and_play_sound(field_value_list, prompt_list, response_list, sound_language_list):
+def show_response_and_play_sound(field_value_list, prompt_list, response_list, language_list):
     # play sound
     if mw.addonManager.getConfig(__name__)["play_sound"]:
-        music_thread = SoundThread(response_list, sound_language_list)
+        music_thread = SoundThread(response_list, language_list)
         music_thread.start()
 
     # show story
@@ -111,7 +112,7 @@ def choose_running_add_on():
 def gen_response() -> None:
     config = mw.addonManager.getConfig(__name__)
 
-    ai_thread = AIThread(config["api_key"], config["model"], config["query"], config["prompt_list"])
+    ai_thread = AIThread(config["api_key"], config["model"], config["query"], config["prompt_list"], config["language_list"])
 
     def run_story_thread(story_thread):
         story_thread.start()
@@ -125,7 +126,7 @@ def gen_response() -> None:
         op=lambda col: run_story_thread(ai_thread),
         # this function will be called if op completes successfully,
         # and it is given the return value of the op
-        success=lambda x: show_response_and_play_sound(ai_thread.field_value_list, config["prompt_list"], ai_thread.response_list, config["sound_language_list"])
+        success=lambda x: show_response_and_play_sound(ai_thread.field_value_list, config["prompt_list"], ai_thread.response_list, config["language_list"])
     )
 
-    op_story.with_progress().run_in_background()
+    op_story.with_progress(label="It may take seconds for AI to generate contents").run_in_background()

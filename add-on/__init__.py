@@ -10,10 +10,10 @@ from .controller import gen_response, choose_running_add_on
 
 
 # create a new menu item, "test"
-action = QAction("AI Words Story", mw)
+action = QAction("Anki Quick AI", mw)
 # set it to call testFunction when it's clicked
 # qconnect(action.triggered, gen_words_story)
-qconnect(action.triggered, gen_response)
+qconnect(action.triggered, choose_running_add_on)
 # and add it to the tools menu
 mw.form.menuTools.addAction(action)
 
