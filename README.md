@@ -1,6 +1,11 @@
 # Anki Quick AI
 
-Quick interaction with OpenAI in Anki.
+The Anki Quick AI Addon is a powerful tool that lets you interact with OpenAI in Anki. It allows you to find and collect field values from notes, interact with OpenAI using customized prompts in multiple languages, and generate and play audio responses.
+
+The process is:
+1. Find & collect field values from Anki's notes.
+2. Interact with OpenAI using custom prompts. Multiple interactions & languages supported.
+3. Generate & play audio responses from OpenAI.
 
 
 
@@ -8,12 +13,19 @@ Quick interaction with OpenAI in Anki.
 
 1. Words story: Retrieve words studied today in Anki, and send them to OpenAI to asks it make a story using these words. Print the story and generate the audio files.
 
-https://github.com/chuanqixu/anki-quick-ai/tree/main/asset/example_words_story.mp4
 
 
 # Usage
 
 ## Anki Add-On (Developing)
+
+### Install
+
+It has been submitted to Anki add-ons [Anki Quick AI](https://ankiweb.net/shared/info/547821970). The code is **547821970**.
+
+To install it, click "Tools->Add-ons->Get Add-ons". In the Code section, input **547821970**, and then click OK.
+
+[Anki]
 
 ### Setup (Optional)
 
