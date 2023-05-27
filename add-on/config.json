@@ -7,7 +7,7 @@
 
     "prompt_list": [
         "Please write a short story in {language} which is less than 300 words, the story should use simple words and these special words must be included: {response}.",
-        "Translate the given text to {language}. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. f the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n{response}"
+        "Translate the given text to {language}. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n{response}"
     ],
     "language_list": [
         "Chinese",

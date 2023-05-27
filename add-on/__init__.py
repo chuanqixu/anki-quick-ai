@@ -5,21 +5,26 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
 from aqt import mw, gui_hooks
 from aqt.qt import QAction, qconnect
 
-from .controller import gen_response, choose_running_add_on
+from .controller import gen_response, run_add_on
 
 
 
 config = mw.addonManager.getConfig(__name__)
 
-# create a new menu item, "test"
-action = QAction("Anki Quick AI", mw)
-# set it to call testFunction when it's clicked
-# qconnect(action.triggered, gen_words_story)
-qconnect(action.triggered, choose_running_add_on)
-# and add it to the tools menu
-mw.form.menuTools.addAction(action)
+action_mw = QAction("Anki Quick AI", mw)
+qconnect(action_mw.triggered, lambda: run_add_on(config["query"]))
+
+# Add it to the tools menu
+mw.form.menuTools.addAction(action_mw)
+
+def run_add_on_browse(browser):
+    action_browse = QAction("Anki Quick AI", mw)
+    browser.form.menubar.addAction(action_browse)
+    qconnect(action_browse.triggered, lambda: run_add_on(browser.form.searchEdit.lineEdit().text(), browser))
+# Add it to the browse window
+gui_hooks.browser_will_show.append(run_add_on_browse)
 
 
 if config["automatic_display"]:
     # hook for end of the deck
-    gui_hooks.reviewer_will_end.append(choose_running_add_on)
+    gui_hooks.reviewer_will_end.append(run_add_on)
