@@ -2,8 +2,10 @@
     "query": "\"deck:current\" introduced:1",
     "note_field": "Front",
 
-    "api_key": "",
-    "model": "gpt-3.5-turbo",
+    "ai_config": {
+        "api_key": "",
+        "model": "gpt-3.5-turbo"
+    },
 
     "prompt_list": [
         "Please write a short story in #language# which is less than #num_words# words, the story should use simple words and these special words must be included: #response#.",
@@ -12,15 +14,13 @@
     "placeholder": {
         "num_words": {
             "0": "100"
-        },
-        "language": {
-            "0": "Chinese",
-            "1": "English"
         }
     },
 
+    "shortcut": "Alt+A",
+
     "play_sound": true,
-    "sound_language_list": [
+    "language_list": [
         "Chinese",
         "English"
     ],
