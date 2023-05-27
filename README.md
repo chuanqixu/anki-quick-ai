@@ -91,6 +91,10 @@ pip install -r requirements.txt --target lib
 Please find in [CHANGELOG.md](./CHANGELOG.md).
 
 
+## Local Usage
+
+It also provides local Python program for this in [src](./src/), but this is not maintained anymore. The latest version is to use Anki add-on.
+
 
 ## License
 
