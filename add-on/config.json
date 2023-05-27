@@ -6,15 +6,24 @@
     "model": "gpt-3.5-turbo",
 
     "prompt_list": [
-        "Please write a short story in {language} which is less than 300 words, the story should use simple words and these special words must be included: {response}.",
-        "Translate the given text to {language}. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n{response}"
+        "Please write a short story in #language# which is less than #num_words# words, the story should use simple words and these special words must be included: #response#.",
+        "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n#response#"
     ],
-    "language_list": [
+    "placeholder": {
+        "num_words": {
+            "0": "100"
+        },
+        "language": {
+            "0": "Chinese",
+            "1": "English"
+        }
+    },
+
+    "play_sound": true,
+    "sound_language_list": [
         "Chinese",
         "English"
     ],
-
-    "play_sound": true,
 
     "automatic_display": true
 }
