@@ -55,9 +55,11 @@ Double click "Tools->Add-ons->Anki Quick AI", and a config page with json data f
 
 
 ## Usage
+There are several ways to run the add-on:
 
-Click the `Tools->` button on the menu bar in the main Anki window, and then click `AI Quick AI`. Wait for seconds for AI generation and transmission between OpenAI and your local machine. If you also generate the sound, then it may take another seconds for sound generation.
+1. Click the `Tools` button on the menu bar in the main Anki window, and then click `Anki Quick AI`. Wait for seconds for AI generation and transmission between OpenAI and your local machine. If you also generate the sound, then it may take another seconds for sound generation.
 
+2. In the Browse window, click the `Anki Quick AI` button on the menu bar.
 
 ## Setup (Optional)
 
