@@ -2,7 +2,7 @@
 
 **This add-on is actively developing. Configuration parameters may be changed when the add-on was updated, but Anki does not automatically change the old configuration.**
 
-**Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
+**After updating the add-on, please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 The Anki Quick AI Addon is a powerful tool that lets you interact with OpenAI in Anki. It allows you to quickly collect field values from notes, interact with OpenAI using customized prompts in multiple languages, and show and play audio responses.
 
@@ -50,7 +50,7 @@ Double click "Tools->Add-ons->Anki Quick AI", and a config page with JSON data f
 1. ai_config:
    1. api_key: API key for OpenAI.
    2. model: OpenAI model to be used in this addon.
-2. query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the (manual)(https://docs.ankiweb.net/searching.html).
+2. query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
 3. note_field: The field whose values will be used to replace {response} placeholder in `prompt_list`. The note field can be found in "Browse->Note Types".
 4. prompt_list: A list of prompts that will be sent to OpenAI. In the prompt, you can use custom placeholders, which are sandwiched with `#`, e.x., `#language#`. Placeholders will be replaced before sending to OpenAI. It is designed for you to quickly change the prompt.
    1. `#response#`: **This is a keyword**. In the first prompt, this will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`. In other prompts, this will be replaced with the previous response from OpenAI.
