@@ -72,7 +72,10 @@ class SoundPlayThread(QThread):
             if filename == "#end":
                 break
             else:
-                playsound.playsound(filename)
+                try:
+                    playsound.playsound(filename)
+                finally:
+                    continue
 
 
 class SoundGenThread(QThread):

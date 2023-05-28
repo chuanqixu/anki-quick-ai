@@ -12,4 +12,4 @@ find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | xargs rm -rf
 rm -r output
 
 # Zip all files excluding meta.json into anki_quick_ai.ankiaddon
-zip -r $FILE * -x "meta.json"
+zip -r $FILE * -x "meta.json" -x "package.sh"

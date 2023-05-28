@@ -1,3 +1,5 @@
+import os, shutil
+
 from aqt import mw
 
 from aqt.browser import Browser
@@ -92,5 +94,8 @@ class ResponseDialog(QDialog):
         # Save the current font size of the text edit
         current_font_size = self.text_edit.font().pointSize()
         self.settings.setValue('FontSize', current_font_size)
-        
+
+        # remove sound directory
+        shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
+
         super().closeEvent(event)
