@@ -1,3 +1,16 @@
+import re
+import html
+
+
+
+def remove_html_tags(text):
+    # Unescape HTML entities
+    text = html.unescape(text)
+    # Use a regular expression to remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
+    return text
+
+
 def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
     promp_index_placeholder_value_dict = {}
     for placeholder, promp_index_value_dict in placeholder_dict.items():

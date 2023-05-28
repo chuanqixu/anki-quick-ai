@@ -12,7 +12,8 @@ Added
 * Support quickly change query and note_field in the pop up window. This will not change the default configuration.
 * Add "Quick AI" button to the browse window to quick click when checking the browse query, the query will be current input query in the browse window.
 * Add shortcut to run it quickly in the main window.
-* Now it supports adding customized placeholders in prompts.
+* Support adding customized placeholders in prompts.
+* Support HTML tags in response.
 
 Changed
 

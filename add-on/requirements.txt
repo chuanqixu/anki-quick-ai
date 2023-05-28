@@ -2,4 +2,3 @@ openai
 edge-tts
 playsound==1.2.2
 iso639
-asyncqt

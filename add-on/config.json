@@ -8,12 +8,19 @@
     },
 
     "prompt_list": [
-        "Please write a short story in #language# which is less than #num_words# words, the story should use simple words and these special words must be included: #response#.",
-        "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. The text to be translated is:\n#response#"
+        "I am going to remember these words: #response#. I want you do the following two things to help me remember these words. The first step is to list these words and their translation in #trans_lang#. I want you to add the HTML tag \"<br>\" at the end of each word translation to make a new line so that it will be shown one word per line. The second step is to write a creative and interesting story in #language# which is less than #num_words# words. Please make sure you include these words in the story. Feel free to conjugate these words to make the story creative and interesting. Please enclose these words and their conjugation forms only in the story you made with the HTML tag <font color=\"#color#\"> </font> so that they can be with color in HTML. Do not translate the story.",
+        "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. Do not maintain the first parts containing words and their translation, and only translate the story. Please remain HTML tags <font color=\"#color#\"> </font> in the text for the translation of words enclosed with them. The text to be translated is:\n#response#"
     ],
     "placeholder": {
         "num_words": {
             "0": "100"
+        },
+        "trans_lang": {
+            "0": "English"
+        },
+        "color": {
+            "0": "red",
+            "1": "red"
         }
     },
 

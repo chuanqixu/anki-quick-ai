@@ -1,24 +1,26 @@
 from aqt import mw, gui_hooks
-from aqt.operations import QueryOp
 from aqt.qt import QAction, qconnect
 
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread
 
 import openai
 import playsound
 import os
-import threading
 import asyncio
+import queue
+import time
 
 from .anki import get_note_field_value_list
 from .ai import call_openai, make_edge_tts_mp3
 from .gui import RunDialog, ResponseDialog
-from .utils import format_prompt_list
+from .utils import remove_html_tags, format_prompt_list
 
 
 
 IS_BROWSE_OPEN = False
+
+AUDIO_FILE_QUEUE = queue.Queue()
 
 class AIThread(QThread):
     def __init__(self, query, note_field, prompt_list, ai_config=None):
@@ -56,20 +58,41 @@ class AIThread(QThread):
         self.success = True
 
 
-class SoundThread(QThread):
-    def __init__(self, response_list, language_list, loop):
+class SoundPlayThread(QThread):
+    def __init__(self, audio_file_queue):
+        super().__init__()
+        self.audio_file_queue = audio_file_queue
+
+    def run(self):
+        while True:
+            filename = self.audio_file_queue.get()
+            while not filename:
+                filename = self.audio_file_queue.get()
+                time.sleep(0.1)
+            if filename == "#end":
+                break
+            else:
+                playsound.playsound(filename)
+
+
+class SoundGenThread(QThread):
+    def __init__(self, response_list, language_list, loop, audio_file_queue):
         super().__init__()
         self.response_list = response_list
         self.language_list = language_list
         self.loop = loop
+        self.audio_file_queue = audio_file_queue
 
     def run(self):
         if not os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
             os.makedirs(os.path.join(os.path.dirname(__file__), "output"))
+
         for i, response in enumerate(self.response_list):
+            response = remove_html_tags(response)
             make_edge_tts_mp3(response, self.language_list[i], os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"), self.loop)
-            playsound.playsound(os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"))
-        # self.loop.close()
+            filename = os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3")
+            self.audio_file_queue.put(filename)
+        self.audio_file_queue.put("#end")
 
 
 def show_response(field_value_list, prompt_list, response_list, parent=None):
@@ -81,7 +104,7 @@ def show_response(field_value_list, prompt_list, response_list, parent=None):
 
     text = f"<font color='{color}'>Choosen values:</font><br>{field_value_str}<br><br>"
     for i, response in enumerate(response_list):
-        text += f"<font color='{color}'>Prompt: {prompt_list[i]}:</font><br>Response: {response}<br><br>"
+        text += f"<font color='{color}'>Prompt:<br>{prompt_list[i]}:</font><br>Response:<br>{response}<br><br>"
 
     if not IS_BROWSE_OPEN:
         parent = mw
@@ -96,8 +119,11 @@ def show_response_and_play_sound(ai_success, field_value_list, prompt_list, resp
     # play sound
     if mw.addonManager.getConfig(__name__)["play_sound"]:
         loop = asyncio.get_event_loop()
-        music_thread = SoundThread(response_list, language_list, loop)
-        music_thread.start()
+        sound_gen_thread = SoundGenThread(response_list, language_list, loop, AUDIO_FILE_QUEUE)
+        sound_gen_thread.start()
+
+        sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
+        sound_play_thread.start()
 
     # show response
     if not parent:
