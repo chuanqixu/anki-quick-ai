@@ -20,7 +20,7 @@ Features:
 
 1. Words story: Retrieve words studied today in Anki, and send them to OpenAI to ask it to make a story using these words. Print the story and generate the audio files.
 
-https://github.com/chuanqixu/anki-quick-ai/assets/33219261/a383cd74-e915-489c-adcb-a770cf8dd2ba
+https://github.com/chuanqixu/anki-quick-ai/assets/33219261/2b3da08d-a7dc-4092-9137-0828474eaf26
 
 ## Install
 
