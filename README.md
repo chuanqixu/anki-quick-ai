@@ -7,8 +7,11 @@
 The Anki Quick AI Addon is a powerful tool that lets you interact with OpenAI in Anki. It allows you to quickly collect field values from notes, interact with OpenAI using customized prompts in multiple languages, and show and play audio responses.
 
 Features:
+
 1. Find & collect field values from Anki's notes.
+
 2. Interact with OpenAI using custom prompts. Multiple interactions are supported.
+
 3. Show & play audio of responses from OpenAI.
 
 
