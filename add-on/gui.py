@@ -96,6 +96,7 @@ class ResponseDialog(QDialog):
         self.settings.setValue('FontSize', current_font_size)
 
         # remove sound directory
-        shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
+        if os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
+            shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
 
         super().closeEvent(event)
