@@ -2,7 +2,7 @@ from aqt import mw, gui_hooks
 from aqt.qt import QAction, qconnect
 
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtCore import QThread
+from PyQt6.QtCore import QThread, pyqtSignal
 
 import openai
 import playsound
@@ -10,11 +10,12 @@ import os
 import asyncio
 import queue
 import time
+import threading
 
 from .anki import get_note_field_value_list
 from .ai import call_openai, make_edge_tts_mp3
 from .gui import RunDialog, ResponseDialog
-from .utils import remove_html_tags, format_prompt_list
+from .utils import remove_html_tags, format_prompt_list, prompt_html, field_value_html
 
 
 
@@ -23,39 +24,100 @@ IS_BROWSE_OPEN = False
 AUDIO_FILE_QUEUE = queue.Queue()
 
 class AIThread(QThread):
-    def __init__(self, query, note_field, prompt_list, ai_config=None):
+    field_value_ready = pyqtSignal(list)
+    new_text_ready = pyqtSignal(str)
+    start_one_iter = pyqtSignal(str)
+    finished_one_iter = pyqtSignal(int, str, bool)
+
+    def __init__(self, query, note_field, prompt_list, ai_config=None, play_sound=None, loop=None):
         super().__init__()
         self.ai_config = ai_config
         if not ai_config:
-            self.ai_config = mw.addonManager.getConfig(__name__)
+            self.ai_config = mw.addonManager.getConfig(__name__)["ai_config"]
 
         self.query = query
         self.note_field = note_field
         self.prompt_list = prompt_list
         self.field_value_list = None
         self.response_list = []
+        self.play_sound = play_sound
+        self.loop = loop
+
+        self.language_list = ["Japanese", "English"]
+
         self.success = False
+
+        if self.play_sound:
+            self.finished_one_iter.connect(self.gen_sound)
 
     def run(self):
         self.success = False
+        delay_time = 0.01
 
         self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field)
-        prompt = self.prompt_list[0].replace(f"#response#", str(self.field_value_list))
+        self.field_value_ready.emit(self.field_value_list)
+
+        time.sleep(0.1) # make sure the first prompt will be printed
 
         # TODO: check api_key and model is given
         self.api_key = self.ai_config.pop("api_key")
         self.model = self.ai_config.pop("model")
 
         openai.api_key = self.api_key
-        response = call_openai(self.model, prompt, **self.ai_config)
-        self.response_list.append(response)
 
-        for i in range(1, len(self.prompt_list)):
-            prompt = self.prompt_list[i].replace(f"#response#", response)
+        if self.play_sound:
+            sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
+            sound_play_thread.start()
+
+        response_str = ""
+        for i, prompt in enumerate(self.prompt_list):
+            prompt_html_str = prompt_html(prompt, "green")
+            self.start_one_iter.emit(prompt_html_str)
+            prompt = prompt.replace(f"#field_value#", str(self.field_value_list))
+            prompt = prompt.replace(f"#response#", response_str)
+
             response = call_openai(self.model, prompt, **self.ai_config)
-            self.response_list.append(response)
+
+            response_str = ""
+            for event in response: 
+                event_text = event['choices'][0]['delta']
+                new_text = event_text.get('content', '')
+                self.new_text_ready.emit(new_text)
+                response_str += new_text
+                time.sleep(delay_time)
+
+            if self.play_sound:
+                self.finished_one_iter.emit(i, response_str, i == len(self.prompt_list) - 1)
+            self.response_list.append(response_str)
 
         self.success = True
+
+    def gen_sound(self, i, response_str, is_end):
+        sound_gen_thread = SoundGenThread(i, response_str, self.language_list, self.loop, AUDIO_FILE_QUEUE, is_end)
+        sound_gen_thread.start()
+
+
+class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will cause Anki to crash because of the async loop
+    def __init__(self, i, response_str, language_list, loop, queue, is_end):
+        super().__init__()
+        self.i = i
+        self.response_str = response_str
+        self.language_list = language_list
+        self.loop = loop
+        self.queue = queue
+        self.is_end = is_end
+
+    def run(self):
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
+            os.makedirs(os.path.join(os.path.dirname(__file__), "output"))
+
+        response_str = remove_html_tags(self.response_str)
+        filename = os.path.join(os.path.dirname(__file__), "output", f"response_{self.i}.mp3")
+        make_edge_tts_mp3(response_str, self.language_list[self.i], filename, self.loop)
+
+        self.queue.put(filename)
+        if self.is_end:
+            self.queue.put("#end")
 
 
 class SoundPlayThread(QThread):
@@ -78,68 +140,20 @@ class SoundPlayThread(QThread):
                     continue
 
 
-class SoundGenThread(QThread):
-    def __init__(self, response_list, language_list, loop, audio_file_queue):
-        super().__init__()
-        self.response_list = response_list
-        self.language_list = language_list
-        self.loop = loop
-        self.audio_file_queue = audio_file_queue
-
-    def run(self):
-        if not os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
-            os.makedirs(os.path.join(os.path.dirname(__file__), "output"))
-
-        for i, response in enumerate(self.response_list):
-            response = remove_html_tags(response)
-            make_edge_tts_mp3(response, self.language_list[i], os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3"), self.loop)
-            filename = os.path.join(os.path.dirname(__file__), "output", f"response_{i}.mp3")
-            self.audio_file_queue.put(filename)
-        self.audio_file_queue.put("#end")
-
-
-def show_response(field_value_list, prompt_list, response_list, parent=None):
-    if len(prompt_list) != len(response_list):
-        raise ValueError(f"Prompt length {len(prompt_list)} is not equal to response length {len(response_list)}")
-
-    color = 'green'
-    field_value_str = '<br>'.join(field_value_list)
-
-    text = f"<font color='{color}'>Choosen values:</font><br>{field_value_str}<br><br>"
-    for i, response in enumerate(response_list):
-        text += f"<font color='{color}'>Prompt:<br>{prompt_list[i]}:</font><br>Response:<br>{response}<br><br>"
-
-    if not IS_BROWSE_OPEN:
-        parent = mw
-    dialog = ResponseDialog(text, parent)
-    dialog.setModal(False)
-    dialog.show()
-
-
-def show_response_and_play_sound(ai_success, field_value_list, prompt_list, response_list, language_list, parent=None):
-    if not ai_success:
-        return
-    # play sound
-    if mw.addonManager.getConfig(__name__)["play_sound"]:
-        loop = asyncio.get_event_loop()
-        sound_gen_thread = SoundGenThread(response_list, language_list, loop, AUDIO_FILE_QUEUE)
-        sound_gen_thread.start()
-
-        sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
-        sound_play_thread.start()
-
-    # show response
-    if not parent:
-        parent = mw
-    show_response(field_value_list, prompt_list, response_list, parent)
-
-
 def gen_response(query, note_field, prompt_list, placeholder, language_list, parent=None) -> None:
+    config = mw.addonManager.getConfig(__name__)
     prompt_list = format_prompt_list(prompt_list, placeholder, language_list)
-    ai_thread = AIThread(query, note_field, prompt_list, mw.addonManager.getConfig(__name__)["ai_config"])
-
-    ai_thread.finished.connect(lambda: show_response_and_play_sound(ai_thread.success, ai_thread.field_value_list, prompt_list, ai_thread.response_list, mw.addonManager.getConfig(__name__)["language_list"], parent=parent))
+    loop = asyncio.get_event_loop()
+    ai_thread = AIThread(query, note_field, prompt_list, config["ai_config"], config["play_sound"], loop)
     ai_thread.start()
+
+    def show_dialog(field_value_list):
+        initial_text = field_value_html(field_value_list, "green")
+        dialog = ResponseDialog(initial_text, ai_thread, parent)
+        dialog.setModal(False)
+        dialog.show()
+    
+    ai_thread.field_value_ready.connect(show_dialog)
 
 
 def run_add_on(parent=None):

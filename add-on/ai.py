@@ -3,17 +3,18 @@ from .edge_tts_data import EDGE_TTS_DICT
 import openai
 import edge_tts
 from iso639 import to_iso639_1
-import random, os
+import random, os, asyncio
+
 
 
 def call_openai(model, prompt, **kwargs):
     completion = openai.ChatCompletion.create(
         model = model,
         messages=[{"role": "user", "content": prompt}],
+        stream=True,
         **kwargs
     )
-    return completion["choices"][0]["message"]["content"].encode("utf8").decode()
-
+    return completion
 
 
 def make_edge_tts_mp3(text, language, filename, loop):

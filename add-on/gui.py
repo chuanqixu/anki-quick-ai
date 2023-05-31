@@ -5,6 +5,7 @@ from aqt import mw
 from aqt.browser import Browser
 from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QMessageBox, QDialog, QTextEdit
+from PyQt6.QtGui import QTextCursor
 
 
 
@@ -59,14 +60,17 @@ class RunDialog(QDialog):
 
 
 class ResponseDialog(QDialog):
-    def __init__(self, text, parent=None):
+    def __init__(self, initial_text, ai_thread, parent=None):
         super().__init__(parent)
 
         self.settings = QSettings('Anki', 'Anki Quick AI')
 
         self.text_edit = QTextEdit(self)
-        self.text_edit.setHtml(text)
+        self.text_edit.setHtml(initial_text)
         self.text_edit.setReadOnly(True)
+
+        self.curr_cursor = self.text_edit.textCursor()
+        self.curr_cursor.movePosition(QTextCursor.End)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.text_edit)
@@ -87,6 +91,18 @@ class ResponseDialog(QDialog):
 
         self.setWindowModality(Qt.NonModal)
 
+        # Connect signal
+        ai_thread.start_one_iter.connect(self.start_new_reponse)
+        ai_thread.new_text_ready.connect(self.append_text)
+    
+    def append_text(self, new_text):
+        self.curr_cursor.insertText(new_text)
+        self.curr_cursor.movePosition(QTextCursor.End)
+    
+    def start_new_reponse(self, prompt):
+        self.curr_cursor.insertHtml(prompt)
+        self.curr_cursor.movePosition(QTextCursor.End)
+
     def closeEvent(self, event):
         # Save the current size of the dialog when it's closed
         self.settings.setValue('DialogSize', self.size())
@@ -96,7 +112,8 @@ class ResponseDialog(QDialog):
         self.settings.setValue('FontSize', current_font_size)
 
         # remove sound directory
-        if os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
-            shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
-
-        super().closeEvent(event)
+        try:
+            if os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
+                shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
+        finally:
+            super().closeEvent(event)

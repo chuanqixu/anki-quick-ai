@@ -5,6 +5,21 @@
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 
+### Version **1.0.2** 2023-05-31
+
+Added
+
+* Now support streamed and real time response!
+
+Changed
+
+* Replace `#field_value#` as the placeholder for field values. Previously, `#response#` is used for this in the first prompt and nothing will be used in the following prompts.
+
+
+Fixed
+
+* No directory of sound files if 'play_sound' is set to false.
+
 ### Version **1.0.1** 2023-05-27
 
 Added
