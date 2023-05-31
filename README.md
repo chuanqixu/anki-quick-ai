@@ -53,10 +53,11 @@ Double click "Tools->Add-ons->Anki Quick AI", and a config page with JSON data f
 2. query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
 3. note_field: The field whose values will be used to replace {response} placeholder in `prompt_list`. The note field can be found in "Browse->Note Types".
 4. prompt_list: A list of prompts that will be sent to OpenAI. In the prompt, you can use custom placeholders, which are sandwiched with `#`, e.x., `#language#`. Placeholders will be replaced before sending to OpenAI. It is designed for you to quickly change the prompt.
-   1. `#response#`: **This is a keyword**. In the first prompt, this will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`. In other prompts, this will be replaced with the previous response from OpenAI.
-   2. `#language#`: **This is a keyword**. This will be replaced with `language_list` in the settings. See below.
-   3. `#name#`: This will be replaced with the value you set in `placeholder`, see below. **Do not specify "response" or "language" as the name, since they have their special usage.**
-5. placeholder: A dict contains customized placeholders. The key is the name of the placeholder. The value is another dict, whose key is the index of the prompt that will be replaced, and the value is the string to replace the placeholder. **You cannot and do not need to specify "response" or "language".**
+   1. `#field_value#`: This will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`.
+   2. `#response#`: **This is a keyword**. This will be replaced with the previous response from OpenAI.
+   3. `#language#`: **This is a keyword**. This will be replaced with `language_list` in the settings. See below.
+   4. `#custom#`: You can specify your custom placeholder. This will be replaced with the value you set in `placeholder`, see below. **Do not specify "field_value", "response", or "language" as the name, since they have their special usage.**
+5. placeholder: A dict contains customized placeholders. The key is the name of the placeholder. The value is another dict, whose key is the index of the prompt that will be replaced, and the value is the string to replace the placeholder. **You cannot and do not need to specify "field_value", "response", or "language".**
 
    For example:
    ```json
@@ -93,8 +94,23 @@ pip install -r requirements.txt --target lib
 
 Please find in [CHANGELOG.md](./CHANGELOG.md).
 
+### Version **1.0.2** 2023-05-30
 
-### Version **1.0.1** 2023-05-27
+Added
+
+* Now support streamed and real time response.
+* Add button to save texts and audio files at the end of the dialog.
+
+Changed
+
+* Replace `#field_value#` as the placeholder for field values. Previously, `#response#` is used for this in the first prompt and nothing will be used in the following prompts.
+* Disabled HTML representation in the dialog.
+
+Fixed
+
+* No directory of sound files if 'play_sound' is set to false.
+
+### Version **1.0.1** -- 2023-05-27
 
 Added
 

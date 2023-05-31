@@ -5,16 +5,17 @@
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 
-### Version **1.0.2** 2023-05-31
+### Version **1.0.2** 2023-05-30
 
 Added
 
-* Now support streamed and real time response!
+* Now support streamed and real time response.
+* Add button to save texts and audio files at the end of the dialog.
 
 Changed
 
 * Replace `#field_value#` as the placeholder for field values. Previously, `#response#` is used for this in the first prompt and nothing will be used in the following prompts.
-
+* Disabled HTML representation in the dialog.
 
 Fixed
 
