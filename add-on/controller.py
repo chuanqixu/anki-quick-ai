@@ -14,7 +14,7 @@ import threading
 
 from .anki import get_note_field_value_list
 from .ai import call_openai, make_edge_tts_mp3
-from .gui import RunDialog, ResponseDialog
+from .gui import RunDialog, ResponseDialog, conf
 from .utils import remove_html_tags, format_prompt_list, prompt_html, field_value_html
 
 
@@ -144,7 +144,7 @@ def gen_response(query, note_field, prompt_list, placeholder, language_list, par
     config = mw.addonManager.getConfig(__name__)
     prompt_list = format_prompt_list(prompt_list, placeholder, language_list)
     loop = asyncio.get_event_loop()
-    ai_thread = AIThread(query, note_field, prompt_list, config["ai_config"], config["play_sound"], loop)
+    ai_thread = AIThread(query, note_field, prompt_list, config["ai_config"], config["general"]["play_sound"], loop)
     ai_thread.start()
 
     def show_dialog(field_value_list):
@@ -160,17 +160,16 @@ def run_add_on(parent=None):
     if not parent:
         parent = mw
 
-    def click_run_add_on(run_widget):
-        config = mw.addonManager.getConfig(__name__)
-        language_list = None
-        if "language_list" in config:
-            language_list = config["language_list"]
-        run_widget.close()
+    def click_run_add_on(run_dialog):
+        prompt_config = run_dialog.prompt_dict[run_dialog.curr_prompt_name]
+        if "language_list" in prompt_config:
+            language_list = prompt_config["language_list"]
+        run_dialog.close()
         gen_response(
-            run_widget.input_field_browse_query.text(), 
-            run_widget.input_field_note_field.text(), 
-            config["prompt_list"],
-            config["placeholder"],
+            run_dialog.input_field_browse_query.text(),
+            run_dialog.input_field_note_field.text(),
+            prompt_config["prompt"],
+            prompt_config["placeholder"],
             language_list,
             # TODO: add quick editing in RunDialog
             parent=parent
@@ -196,7 +195,7 @@ def run_add_on_browse(browser):
     qconnect(action_browse.triggered, lambda: run_add_on(browser))
 
     # Add a shortcut
-    shortcut = mw.addonManager.getConfig(__name__)["shortcut"]
+    shortcut = mw.addonManager.getConfig(__name__)["general"]["shortcut"]
     shortcut = QShortcut(QKeySequence(shortcut), browser)
     shortcut.activated.connect(lambda: run_add_on(browser))
 
@@ -216,10 +215,10 @@ def init_control():
     gui_hooks.browser_will_show.append(run_add_on_browse)
 
     # Hook for end of the deck
-    if mw.addonManager.getConfig(__name__)["automatic_display"]:
+    if mw.addonManager.getConfig(__name__)["general"]["automatic_display"]:
         gui_hooks.reviewer_will_end.append(run_add_on)
 
     # Add a hotkey
-    shortcut = mw.addonManager.getConfig(__name__)["shortcut"]
+    shortcut = mw.addonManager.getConfig(__name__)["general"]["shortcut"]
     shortcut = QShortcut(QKeySequence(shortcut), mw)
     shortcut.activated.connect(run_add_on)

@@ -40,3 +40,14 @@ def field_value_html(field_value_list, color):
     field_value_str = '<br>'.join(field_value_list)
 
     return f"<font color='{color}'>Choosen values:</font><br>{field_value_str}"
+
+
+def find_placeholder(prompt):
+    # Matches any string sandwiched by #
+    matches = re.findall(r'#(.*?)#', prompt)
+
+    # Ignore keyword placeholders
+    ignore_list = ['response', 'field_value', 'language']
+    matches = [match for match in matches if match not in ignore_list]
+    
+    return matches
