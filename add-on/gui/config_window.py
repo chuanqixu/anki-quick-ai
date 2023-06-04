@@ -41,6 +41,7 @@ def prompt_tab(conf_window: ConfigWindow) -> None:
     prompt_name_table_dialog = PromptNameTableDialog(conf)
     tab.layout().addWidget(prompt_name_table_dialog)
     conf_window.execute_on_save(lambda: conf.set("prompt", prompt_name_table_dialog.prompt_data))
+    conf_window.widget_updates.append(prompt_name_table_dialog.load_data)
 
     # This adds a stretchable blank space.
     # If you are not sure what this does,

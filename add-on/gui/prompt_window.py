@@ -1,8 +1,7 @@
+import copy
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QVBoxLayout, QPushButton, QTableWidgetItem, QInputDialog, QMessageBox, QLabel, QLineEdit, QTextEdit, QDialogButtonBox
-import os, json
-
-
 
 from ..utils import find_placeholder
 # from .config_window import conf
@@ -44,6 +43,7 @@ class PromptNameTableDialog(QDialog):
         self.table.itemChanged.connect(self.table_updated)
 
     def load_data(self):
+        self.table.setRowCount(0)
         prompt_data = self.config_manager["prompt"]
 
         for name in prompt_data:
@@ -103,18 +103,26 @@ class PromptNameTableDialog(QDialog):
         old_text = self.row_text_dict.get(row)
         new_text = item.text()
 
-        # Update the stored text of the item
-        self.row_text_dict[row] = new_text
+        if not old_text:
+            return
 
-        # Remove the old text from the list and add the new text
-        self.prompt_data[new_text] = self.prompt_data.pop(old_text)
+        if not new_text:
+            self.row_text_dict.pop(row)
+            self.prompt_data.pop(old_text)
+
+        if old_text != new_text:
+            # Update the stored text of the item
+            self.row_text_dict[row] = new_text
+
+            # Remove the old text from the list and add the new text
+            self.prompt_data[new_text] = self.prompt_data.pop(old_text)
 
 
 
 class PromptConfigDialog(QDialog):
     def __init__(self, prompt_name=None, prompt_config_data=None):
         super().__init__()
-        self.prompt_config_data = prompt_config_data
+        self.prompt_config_data = copy.deepcopy(prompt_config_data)
         self.is_changed = False
 
         layout = QVBoxLayout()
@@ -169,17 +177,20 @@ class PromptConfigDialog(QDialog):
         label = QLabel("Language can be used in prompts as placeholder with #language#.\nThis will be used as the language for sound generation for prompts.\nThe order is corresponding to prompts' order.")
         layout.addWidget(label)
 
+        button_layout = QHBoxLayout()
         # save button
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_prompt)
         save_button.setFixedSize(100, 40)  # set the size of the button
-        layout.addWidget(save_button, 0, Qt.AlignCenter)  # align button to the center
+        button_layout.addWidget(save_button, 0, Qt.AlignCenter)  # align button to the center
 
         # Cancel button
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.close)
         cancel_button.setFixedSize(100, 40)  # set the size of the button
-        layout.addWidget(cancel_button, 0, Qt.AlignCenter)  # align button to the center
+        button_layout.addWidget(cancel_button, 0, Qt.AlignCenter)  # align button to the center
+
+        layout.addLayout(button_layout)
 
     def save_prompt(self):
         if not self.prompt_config_data:
@@ -226,7 +237,7 @@ class TableDialog(QDialog):
         super().__init__()
         self.main_layout = QVBoxLayout(self)
 
-        self.data = data
+        self.data = data if data else []
 
         self.title_layout = QHBoxLayout()
 
@@ -253,9 +264,8 @@ class TableDialog(QDialog):
         self.table.itemChanged.connect(self.table_updated)
 
     def load_data(self):
-        if self.data:
-            for name in self.data:
-                self.add_item(name)
+        for name in self.data:
+            self.add_item(name)
 
     def add_item(self, name):
         row = self.table.rowCount()
@@ -267,8 +277,13 @@ class TableDialog(QDialog):
         self.table.setRowCount(0)
         self.load_data()
 
-    def table_updated(self):
-        self.save_data()
+    def table_updated(self, item):
+        row = item.row()
+        if row < len(self.data):
+            self.data[row] = item.text()
+        else:
+            self.data.append(item.text())
+        self.changed.emit()
 
     def create_item(self):
         dialog = PromptInputDialog(self)
@@ -290,11 +305,13 @@ class TableDialog(QDialog):
                 self.save_data()
 
     def save_data(self):
-        self.data = []
+        data = []
 
         for row in range(self.table.rowCount()):
             item = self.table.item(row, 0)
-            self.data.append(item.text())
+            data.append(item.text())
+
+        self.data = data
 
         self.changed.emit()
 
@@ -329,7 +346,7 @@ class PlaceholderTableDialog(QDialog):
         super().__init__()
         self.main_layout = QVBoxLayout(self)
 
-        self.placeholder_dict = placeholder_dict
+        self.placeholder_dict = copy.deepcopy(placeholder_dict)
 
         label = QLabel("<b>Placeholder:</b>")
         self.main_layout.addWidget(label)
@@ -341,6 +358,8 @@ class PlaceholderTableDialog(QDialog):
         self.table.setColumnWidth(2, 200)
         self.load_data()
         self.main_layout.addWidget(self.table)
+
+        self.table.itemChanged.connect(self.table_updated)
 
     def load_data(self):
         if self.placeholder_dict:
@@ -357,18 +376,34 @@ class PlaceholderTableDialog(QDialog):
         self.table.setItem(row, 1, QTableWidgetItem(name))
         self.table.setItem(row, 2, QTableWidgetItem(value))
 
+        item = self.table.item(row, 0)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item = self.table.item(row, 1)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
     def update_item(self, placeholder_dict):
         self.placeholder_dict = placeholder_dict
         self.table.setRowCount(0)
         self.load_data()
 
+    def table_updated(self, item):
+        row = item.row()
+        if item.column() == 2:
+            i = self.table.item(row, 0).text()
+            name = self.table.item(row, 1).text()
+            value = self.table.item(row, 2).text()
+            if i in self.placeholder_dict:
+                if name in self.placeholder_dict[i]:
+                    self.placeholder_dict[i][name] = value
+
     def save_data(self):
-        self.placeholder_dict = {}
+        placeholder_dict = {}
         for row in range(self.table.rowCount()):
-            i = self.table.item(row, 0)
-            name = self.table.item(row, 1)
-            value = self.table.item(row, 2)
-            if i not in self.placeholder_dict:
-                self.placeholder_dict[i] = {name: value}
+            i = self.table.item(row, 0).text()
+            name = self.table.item(row, 1).text()
+            value = self.table.item(row, 2).text()
+            if i not in placeholder_dict:
+                placeholder_dict[i] = {name: value}
             else:
-                self.placeholder_dict[i][name] = value
+                placeholder_dict[i][name] = value
+        self.placeholder_dict = placeholder_dict

@@ -29,21 +29,21 @@ class AIThread(QThread):
     start_one_iter = pyqtSignal(str)
     finished_one_iter = pyqtSignal(int, str, bool)
 
-    def __init__(self, query, note_field, prompt_list, ai_config=None, play_sound=None, loop=None):
+    def __init__(self, prompt_config, ai_config=None, play_sound=None, loop=None):
         super().__init__()
         self.ai_config = ai_config
         if not ai_config:
             self.ai_config = mw.addonManager.getConfig(__name__)["ai_config"]
 
-        self.query = query
-        self.note_field = note_field
-        self.prompt_list = prompt_list
+        self.query = prompt_config["query"]
+        self.note_field = prompt_config["note_field"]
+        self.prompt_list = prompt_config["prompt"]
+        self.language_list = prompt_config["language"]
+
         self.field_value_list = None
         self.response_list = []
         self.play_sound = play_sound
         self.loop = loop
-
-        self.language_list = ["Japanese", "English"]
 
         self.success = False
 
@@ -140,11 +140,11 @@ class SoundPlayThread(QThread):
                     continue
 
 
-def gen_response(query, note_field, prompt_list, placeholder, language_list, parent=None) -> None:
+def gen_response(prompt_config, parent=None) -> None:
     config = mw.addonManager.getConfig(__name__)
-    prompt_list = format_prompt_list(prompt_list, placeholder, language_list)
+    prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
     loop = asyncio.get_event_loop()
-    ai_thread = AIThread(query, note_field, prompt_list, config["ai_config"], config["general"]["play_sound"], loop)
+    ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"], loop)
     ai_thread.start()
 
     def show_dialog(field_value_list):
@@ -160,18 +160,13 @@ def run_add_on(parent=None):
     if not parent:
         parent = mw
 
-    def click_run_add_on(run_dialog):
-        prompt_config = run_dialog.prompt_dict[run_dialog.curr_prompt_name]
-        if "language_list" in prompt_config:
-            language_list = prompt_config["language_list"]
-        run_dialog.close()
+    def click_run_add_on(run_widget):
+        prompt_config = run_widget.prompt_dict[run_widget.curr_prompt_name]
+        prompt_config["query"] = run_widget.input_field_browse_query.text()
+        prompt_config["note_field"] = run_widget.input_field_note_field.text()
+        run_widget.close()
         gen_response(
-            run_dialog.input_field_browse_query.text(),
-            run_dialog.input_field_note_field.text(),
-            prompt_config["prompt"],
-            prompt_config["placeholder"],
-            language_list,
-            # TODO: add quick editing in RunDialog
+            prompt_config,
             parent=parent
         )
 

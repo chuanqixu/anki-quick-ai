@@ -1,6 +1,6 @@
 __pycache__/
 **.egg-info
-output/*
+add-on/output/**
 .env
 .mypy**
 meta.json

@@ -12,22 +12,15 @@ def remove_html_tags(text):
 
 
 def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
-    promp_index_placeholder_value_dict = {}
-    for placeholder, promp_index_value_dict in placeholder_dict.items():
-        for index, value in promp_index_value_dict.items():
-            index = int(index)
-            if index in promp_index_placeholder_value_dict:
-                promp_index_placeholder_value_dict[index][placeholder] = value
-            else:
-                promp_index_placeholder_value_dict[index] = {placeholder: value}
-    
     formatted_prompt_list = []
-    for index, prompt in enumerate(prompt_list):
-        if index in promp_index_placeholder_value_dict:
-            for key, value in promp_index_placeholder_value_dict[index].items():
+    for i, prompt in enumerate(prompt_list):
+        int_i = i
+        i = str(i + 1)
+        if i in placeholder_dict:
+            for key, value in placeholder_dict[i].items():
                 prompt = prompt.replace(f"#{key}#", value)
         if language_list:
-            prompt = prompt.replace(f"#language#", language_list[index])
+            prompt = prompt.replace(f"#language#", language_list[int_i])
         formatted_prompt_list.append(prompt)
     return formatted_prompt_list
 
