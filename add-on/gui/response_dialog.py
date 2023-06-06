@@ -1,8 +1,9 @@
 import os, shutil
 
-from PyQt6.QtCore import Qt, QSettings, QDir, QFileInfo
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QDialog, QTextEdit, QFileDialog
+from PyQt6.QtCore import Qt, QSettings, QDir, QFileInfo, QUrl
+from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QDialog, QTextEdit, QFileDialog, QSlider, QWidget
 from PyQt6.QtGui import QTextCursor
+from PyQt6.QtMultimedia import QMediaPlayer, QMediaPlayer, QAudioOutput
 
 
 
@@ -38,9 +39,9 @@ class ResponseDialog(QDialog):
         button_layout.addWidget(self.regen_button)
         button_layout.addWidget(self.save_audio_button)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.text_edit)
-        layout.addLayout(button_layout)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.addWidget(self.text_edit)
+        self.main_layout.addLayout(button_layout)
 
         # Restore the previous size of the dialog
         size = self.settings.value('DialogSize')
@@ -59,8 +60,9 @@ class ResponseDialog(QDialog):
         self.setWindowModality(Qt.NonModal)
 
         # Connect signal
-        ai_thread.start_one_iter.connect(self.append_html)
-        ai_thread.new_text_ready.connect(self.append_text)
+        self.ai_thread.start_one_iter.connect(self.append_html)
+        self.ai_thread.new_text_ready.connect(self.append_text)
+        self.ai_thread.finished_gen_sound.connect(self.add_sound_play_bar)
     
     def append_text(self, new_text):
         self.curr_cursor.insertText(new_text)
@@ -80,12 +82,13 @@ class ResponseDialog(QDialog):
 
         # close thread
         if hasattr(self.ai_thread, "sound_play_thread"):
-            pass
+            self.ai_thread.sound_play_thread.terminate()
 
         # remove sound directory
         try:
-            if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
-                shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
+            pass
+            # if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
+            #     shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
         finally:
             super().closeEvent(event)
 
@@ -133,3 +136,57 @@ class ResponseDialog(QDialog):
             for filename in os.listdir(src_audio_dir):
                 if filename.endswith(".mp3"):
                     shutil.copy(os.path.join(src_audio_dir, filename), os.path.join(file_dir_path, filename))
+    
+    def add_sound_play_bar(self, filename):
+        sound_play_bar = AudioPlayerWidget(filename)
+        self.main_layout.addWidget(sound_play_bar)
+
+
+
+class AudioPlayerWidget(QWidget):
+    def __init__(self, filename):
+        super().__init__()
+
+        # Create play and pause buttons
+        self.play_button = QPushButton('Play')
+        self.play_button.clicked.connect(self.play_audio)
+
+        self.pause_button = QPushButton('Pause')
+        self.pause_button.clicked.connect(self.pause_audio)
+
+        # Create slider
+        self.seek_slider = QSlider(Qt.Orientation.Horizontal)
+        self.seek_slider.sliderMoved.connect(self.seek_audio)
+
+        # Set layout
+        layout = QHBoxLayout()
+        layout.addWidget(self.play_button)
+        layout.addWidget(self.pause_button)
+        layout.addWidget(self.seek_slider)
+
+        self.setLayout(layout)
+
+        # Load audio file
+        self.media_player = QMediaPlayer()
+        self.media_player.setSource(QUrl.fromLocalFile(filename))
+        self.media_player.positionChanged.connect(self.update_seek_slider)
+        self.media_player.durationChanged.connect(self.update_duration)
+        self.seek_slider.setMaximum(self.media_player.duration())
+
+        self.audio = QAudioOutput()
+        self.media_player.setAudioOutput(self.audio)
+
+    def play_audio(self):
+        self.media_player.play()
+
+    def pause_audio(self):
+        self.media_player.pause()
+
+    def seek_audio(self, position):
+        self.media_player.setPosition(position)
+
+    def update_seek_slider(self, position):
+        self.seek_slider.setValue(position)
+
+    def update_duration(self, duration):
+        self.seek_slider.setRange(0, duration)

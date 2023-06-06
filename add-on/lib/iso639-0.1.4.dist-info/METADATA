@@ -6,7 +6,6 @@ Home-page: https://github.com/janpipek/iso639-python
 Author: Jan Pipek
 Author-email: jan.pipek@gmail.com
 License: MIT
-Platform: UNKNOWN
 License-File: LICENSE
 Provides-Extra: full
 
@@ -46,5 +45,3 @@ For more examples, see doctests in the source code.
 Acknowledgments
 ---------------
 @hosford42 - adding the native language support
-
-

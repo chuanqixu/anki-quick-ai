@@ -13,10 +13,12 @@ Added
 * Add configuration GUI. Now configuration is more clear and straighforward!
 * Support multiple predefined prompt.
 * Run again button to generate new response.
+* Sliders for audio.
 
 Changed
 
 * Now can quickly change prompt and placeholder before running.
+* Change sound play module from "playsound" to "pygame". It provides more controls, but requires over 20 MB more space.
 
 
 ### Version **1.0.2** 2023-05-30

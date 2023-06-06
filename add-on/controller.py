@@ -2,10 +2,10 @@ from aqt import mw, gui_hooks
 from aqt.qt import QAction, qconnect
 
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal, QUrl
+from PyQt6.QtMultimedia import QMediaPlayer, QMediaPlayer, QAudioOutput
 
 import openai
-import playsound
 import os
 import asyncio
 import queue
@@ -28,6 +28,7 @@ class AIThread(QThread):
     new_text_ready = pyqtSignal(str)
     start_one_iter = pyqtSignal(str)
     finished_one_iter = pyqtSignal(int, str, bool)
+    finished_gen_sound = pyqtSignal(str)
 
     def __init__(self, prompt_config, ai_config=None, play_sound=None, loop=None):
         super().__init__()
@@ -98,13 +99,16 @@ class AIThread(QThread):
         self.success = True
 
     def gen_sound(self, i, response_str, is_end):
-        sound_gen_thread = SoundGenThread(i, response_str, self.language_list, self.loop, AUDIO_FILE_QUEUE, is_end)
+        sound_gen_thread = SoundGenThread(i, response_str, self.language_list, self.loop, AUDIO_FILE_QUEUE, is_end, self)
         sound_gen_thread.daemon = True
         sound_gen_thread.start()
+    
+    def signal_finished_gen_sound(self, filename):
+        self.finished_gen_sound.emit(filename)
 
 
 class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will cause Anki to crash because of the async loop
-    def __init__(self, i, response_str, language_list, loop, queue, is_end):
+    def __init__(self, i, response_str, language_list, loop, queue, is_end, ai_thread):
         super().__init__()
         self.i = i
         self.response_str = response_str
@@ -112,6 +116,7 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
         self.loop = loop
         self.queue = queue
         self.is_end = is_end
+        self.ai_thread = ai_thread
 
     def run(self):
         if not os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
@@ -122,6 +127,9 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
         make_edge_tts_mp3(response_str, self.language_list[self.i], filename, self.loop)
 
         self.queue.put(filename)
+
+        self.ai_thread.signal_finished_gen_sound(filename)
+
         if self.is_end:
             self.queue.put("#end")
 
@@ -143,7 +151,11 @@ class SoundPlayThread(QThread):
             else:
                 try:
                     if os.path.isfile(filename):
-                        playsound.playsound(filename)
+                        media_player = QMediaPlayer()
+                        media_player.setSource(QUrl.fromLocalFile(filename))
+                        audio = QAudioOutput()
+                        media_player.setAudioOutput(audio)
+                        media_player.play()
                 finally:
                     continue
 
