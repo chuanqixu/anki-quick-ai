@@ -30,6 +30,10 @@ class PromptNameTableDialog(QDialog):
         self.update_button.clicked.connect(self.update_item)
         self.button_layout.addWidget(self.update_button)
 
+        self.copy_button = QPushButton('Copy')
+        self.copy_button.clicked.connect(self.copy_item)
+        self.button_layout.addWidget(self.copy_button)
+
         self.delete_button = QPushButton('Delete')
         self.delete_button.clicked.connect(self.delete_item)
         self.button_layout.addWidget(self.delete_button)
@@ -39,11 +43,11 @@ class PromptNameTableDialog(QDialog):
         self.row_text_dict = {} # keep tracks of names in the table so that users can directly change in the table
         self.table = QTableWidget(0, 1)  # 0 rows, 1 column
         self.table.setColumnWidth(0, 400)
-        self.table.itemDoubleClicked.connect(self.double_click_item)
+        self.table.itemDoubleClicked.connect(self.update_item)
         self.load_data()
         self.main_layout.addWidget(self.table)
 
-        self.table.itemChanged.connect(self.table_updated)
+        # self.table.itemChanged.connect(self.table_updated) # conflict with double click
 
     def load_data(self):
         self.table.setRowCount(0)
@@ -58,6 +62,8 @@ class PromptNameTableDialog(QDialog):
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, 0, QTableWidgetItem(name))
+        item = self.table.item(row, 0)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
         self.row_text_dict[row] = name
 
@@ -85,25 +91,13 @@ class PromptNameTableDialog(QDialog):
                 self.prompt_data[prompt_name] = prompt_config_dialog.prompt_config_data
                 if old_name != prompt_name:
                     self.prompt_data.pop(old_name)
-
-                    self.row_text_dict.remove(row)
                     self.row_text_dict[row] = prompt_name
-    
-    def double_click_item(self, item):
-        row = item.row()
-        old_name = item.text()
-        prompt_config_dialog = PromptConfigDialog(old_name, self.prompt_data[old_name])
-        prompt_config_dialog.exec_()
 
-        if prompt_config_dialog.is_changed:
-            prompt_name = prompt_config_dialog.input_field_prompt_name.text()
-            item.setText(prompt_name)
-            self.prompt_data[prompt_name] = prompt_config_dialog.prompt_config_data
-            if old_name != prompt_name:
-                self.prompt_data.pop(old_name)
-
-                self.row_text_dict.remove(row)
-                self.row_text_dict[row] = prompt_name
+    def copy_item(self):
+        item = self.table.currentItem()
+        prompt_name = item.text()
+        self.add_item(f"{prompt_name} copy")
+        self.prompt_data[f"{prompt_name} copy"] = self.prompt_data[prompt_name]
 
     def delete_item(self):
         row = self.table.currentRow()
@@ -281,16 +275,18 @@ class TableDialog(QDialog):
         if button:
             self.add_button = QPushButton('Add')
             self.add_button.clicked.connect(self.create_item)
+            self.add_button.setFixedSize(80, 35)
             self.title_layout.addWidget(self.add_button)
 
             self.delete_button = QPushButton('Delete')
             self.delete_button.clicked.connect(self.delete_item)
+            self.delete_button.setFixedSize(80, 35)
             self.title_layout.addWidget(self.delete_button)
 
         self.main_layout.addLayout(self.title_layout)
 
         self.table = QTableWidget(0, 1)  # 0 rows, 1 column
-        self.table.setColumnWidth(0, 300)
+        self.table.setColumnWidth(0, 350)
         self.table.setHorizontalHeaderLabels(["Value"])
         self.load_data()
         self.main_layout.addWidget(self.table)
@@ -305,6 +301,8 @@ class TableDialog(QDialog):
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, 0, QTableWidgetItem(name))
+        item = self.table.item(row, 0)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
     
     def update_item(self, data):
         self.data = data

@@ -42,6 +42,7 @@ class AIThread(QThread):
 
         self.field_value_list = None
         self.response_list = []
+        self.sound_play_thread = None
         self.play_sound = play_sound
         self.loop = loop
 
@@ -52,7 +53,6 @@ class AIThread(QThread):
 
     def run(self):
         self.success = False
-        delay_time = 0.01
 
         self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field)
         self.field_value_ready.emit(self.field_value_list)
@@ -64,10 +64,15 @@ class AIThread(QThread):
         self.model = self.ai_config.pop("model")
 
         openai.api_key = self.api_key
+        self.response()
+
+    def response(self):
+        delay_time = 0.01
 
         if self.play_sound:
-            sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
-            sound_play_thread.start()
+            self.sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
+            self.sound_play_thread.setTerminationEnabled(True)
+            self.sound_play_thread.start()
 
         response_str = ""
         for i, prompt in enumerate(self.prompt_list):
@@ -94,6 +99,7 @@ class AIThread(QThread):
 
     def gen_sound(self, i, response_str, is_end):
         sound_gen_thread = SoundGenThread(i, response_str, self.language_list, self.loop, AUDIO_FILE_QUEUE, is_end)
+        sound_gen_thread.daemon = True
         sound_gen_thread.start()
 
 
@@ -124,6 +130,7 @@ class SoundPlayThread(QThread):
     def __init__(self, audio_file_queue):
         super().__init__()
         self.audio_file_queue = audio_file_queue
+        self.process = None
 
     def run(self):
         while True:
@@ -135,14 +142,20 @@ class SoundPlayThread(QThread):
                 break
             else:
                 try:
-                    playsound.playsound(filename)
+                    if os.path.isfile(filename):
+                        playsound.playsound(filename)
                 finally:
                     continue
 
 
-def gen_response(prompt_config, parent=None) -> None:
+def gen_response(prompt_config, parent=None, response_dialog=None):
+    if response_dialog:
+        response_dialog.close()
+        AUDIO_FILE_QUEUE.queue.clear()
     config = mw.addonManager.getConfig(__name__)
     prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
+    # regen_response(prompt_config, parent=parent)
+
     loop = asyncio.get_event_loop()
     ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"], loop)
     ai_thread.start()
@@ -150,9 +163,10 @@ def gen_response(prompt_config, parent=None) -> None:
     def show_dialog(field_value_list):
         initial_text = field_value_html(field_value_list, "green")
         dialog = ResponseDialog(initial_text, ai_thread, parent)
+        dialog.regen_button.clicked.connect(lambda: gen_response(prompt_config, parent, dialog))
         dialog.setModal(False)
         dialog.show()
-    
+
     ai_thread.field_value_ready.connect(show_dialog)
 
 

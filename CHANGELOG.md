@@ -5,12 +5,26 @@
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 
-### Version **1.0.2** 2023-05-30
+
+### Version **1.0.2** 2023-06-03
 
 Added
 
-* Now support streamed and real time response.
-* Add button to save texts and audio files at the end of the dialog.
+* Add configuration GUI. Now configuration is more clear and straighforward!
+* Support multiple predefined prompt.
+* Run again button to generate new response.
+
+Changed
+
+* Now can quickly change prompt and placeholder before running.
+
+
+### Version **1.0.2** 2023-05-30
+ 
+Added
+
+* Now support streamed and real-time response.
+* Add buttons to save texts and audio files at the end of the dialog.
 
 Changed
 

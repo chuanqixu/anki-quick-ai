@@ -9,6 +9,7 @@ from PyQt6.QtGui import QTextCursor
 class ResponseDialog(QDialog):
     def __init__(self, initial_text, ai_thread, parent=None):
         super().__init__(parent)
+        self.ai_thread = ai_thread
 
         self.settings = QSettings('Anki', 'Anki Quick AI')
 
@@ -20,15 +21,21 @@ class ResponseDialog(QDialog):
         self.curr_cursor.movePosition(QTextCursor.End)
 
         self.save_text_button = QPushButton("Save Text", self)
-        self.save_text_button.setFixedSize(120, 40)
+        self.save_text_button.setFixedSize(120, 35)
         self.save_text_button.clicked.connect(self.save_text)
 
+        self.regen_button = QPushButton("Run Again", self)
+        self.regen_button.setFixedSize(120, 35)
+        self.regen_button.setStyleSheet('QPushButton {background-color: #DC143C;}')
+        # connect in controller.py
+
         self.save_audio_button = QPushButton("Save Audio", self)
-        self.save_audio_button.setFixedSize(120, 40)
+        self.save_audio_button.setFixedSize(120, 35)
         self.save_audio_button.clicked.connect(self.save_audio)
 
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.save_text_button)
+        button_layout.addWidget(self.regen_button)
         button_layout.addWidget(self.save_audio_button)
 
         layout = QVBoxLayout(self)
@@ -52,14 +59,14 @@ class ResponseDialog(QDialog):
         self.setWindowModality(Qt.NonModal)
 
         # Connect signal
-        ai_thread.start_one_iter.connect(self.start_new_reponse)
+        ai_thread.start_one_iter.connect(self.append_html)
         ai_thread.new_text_ready.connect(self.append_text)
     
     def append_text(self, new_text):
         self.curr_cursor.insertText(new_text)
         self.curr_cursor.movePosition(QTextCursor.End)
     
-    def start_new_reponse(self, prompt):
+    def append_html(self, prompt):
         self.curr_cursor.insertHtml(prompt)
         self.curr_cursor.movePosition(QTextCursor.End)
 
@@ -71,10 +78,14 @@ class ResponseDialog(QDialog):
         current_font_size = self.text_edit.font().pointSize()
         self.settings.setValue('FontSize', current_font_size)
 
+        # close thread
+        if hasattr(self.ai_thread, "sound_play_thread"):
+            pass
+
         # remove sound directory
         try:
-            if os.path.exists(os.path.join(os.path.dirname(__file__), "output")):
-                shutil.rmtree(os.path.join(os.path.dirname(__file__), "output"))
+            if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
+                shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
         finally:
             super().closeEvent(event)
 
