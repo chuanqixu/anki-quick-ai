@@ -24,4 +24,5 @@ def make_edge_tts_mp3(text, language, filename, loop):
     if os.path.isfile(filename):
         os.remove(filename)
 
-    loop.run_until_complete(communicate.save(filename))
+    # loop.run_until_complete(communicate.save(filename))
+    asyncio.run(communicate.save(filename))

@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLine
 
 from .prompt_window import PromptConfigDialog, TableDialog, PlaceholderTableDialog, conf
 from ..utils import find_placeholder
+from .prompt_window import PromptConfigDialog
 
 
 class RunDialog(QDialog):
@@ -72,7 +73,7 @@ class RunDialog(QDialog):
         self.curr_prompt_name = self.prompt_box.itemData(index)
 
     def config_prompt(self):
-        prompt_config_dialog = PromptConfigDialogInRun(self.prompt_dict[self.curr_prompt_name])
+        prompt_config_dialog = PromptConfigDialog(prompt_name=None, prompt_config_data=self.prompt_dict[self.curr_prompt_name], in_run_dialog=True)
         prompt_config_dialog.exec_()
         if prompt_config_dialog.is_changed:
             self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.prompt_config_data

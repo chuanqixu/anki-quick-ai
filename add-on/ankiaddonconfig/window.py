@@ -55,15 +55,15 @@ class ConfigWindow(QDialog):
 
         btn_box.addStretch(1)
 
-        self.cancel_btn = QPushButton("Cancel")
-        self.cancel_btn.clicked.connect(self.on_cancel)
-        btn_box.addWidget(self.cancel_btn)
-
         self.save_btn = QPushButton("Save")
         self.save_btn.setDefault(True)
         self.save_btn.setShortcut("Ctrl+Return")
         self.save_btn.clicked.connect(self.on_save)
         btn_box.addWidget(self.save_btn)
+
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.on_cancel)
+        btn_box.addWidget(self.cancel_btn)
 
     def update_widgets(self) -> None:
         try:
