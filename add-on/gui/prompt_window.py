@@ -171,7 +171,7 @@ class PromptConfigDialog(QDialog):
 
         # Prompt
         prompt_list = self.prompt_config_data["prompt"] if self.prompt_config_data else None
-        self.prompt_table_dialog = TableDialog("Prompt:", prompt_list, button=True, create_dialog=PromptInputDialog)
+        self.prompt_table_dialog = TableDialog("Prompt:", prompt_list, button=True, create_dialog=PromptInputDialog, editable=False)
         self.prompt_table_dialog.table.itemDoubleClicked.connect(self.double_click_item)
         self.prompt_table_dialog.changed.connect(self.update_placeholder)
         self.prompt_table_dialog.changed.connect(self.update_language)
@@ -259,9 +259,10 @@ class PromptConfigDialog(QDialog):
 
 class TableDialog(QDialog):
     changed = pyqtSignal()
-    def __init__(self, name, data = None, button=False, create_dialog=None):
+    def __init__(self, name, data = None, button=False, create_dialog=None, editable=True):
         super().__init__()
         self.create_dialog = create_dialog
+        self.editable = editable
 
         self.main_layout = QVBoxLayout(self)
 
@@ -302,7 +303,8 @@ class TableDialog(QDialog):
         self.table.insertRow(row)
         self.table.setItem(row, 0, QTableWidgetItem(name))
         item = self.table.item(row, 0)
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        if not self.editable:
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
     
     def update_item(self, data):
         self.data = data

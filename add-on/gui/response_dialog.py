@@ -155,8 +155,11 @@ class ResponseDialog(QDialog):
             self.audio_player_widget_dict[i].play_audio()
 
     def auto_play_audio(self, status, i):
+        # TODO: automatically play when finishing generating
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.audio_player_widget_dict[i - 1].media_player.mediaStatusChanged.disconnect()
+            if i not in self.audio_player_widget_dict:
+                return
             if i + 1 < len(self.ai_thread.prompt_list):
                 self.audio_player_widget_dict[i].media_player.mediaStatusChanged.connect(lambda status: self.auto_play_audio(status, i + 1))
             self.audio_player_widget_dict[i].play_audio()
