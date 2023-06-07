@@ -21,8 +21,8 @@ def make_edge_tts_mp3(text, language, filename, loop):
     langcode = to_iso639_1(language)
     voice = random.choice(EDGE_TTS_DICT.get(langcode))
     communicate = edge_tts.Communicate(text, voice)
-    if os.path.isfile(filename):
-        os.remove(filename)
+    # if os.path.isfile(filename):
+    #     os.remove(filename)
 
     # loop.run_until_complete(communicate.save(filename))
     asyncio.run(communicate.save(filename))

@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, time
 
 from PyQt6.QtCore import Qt, QSettings, QDir, QFileInfo, QUrl
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QDialog, QTextEdit, QFileDialog, QSlider, QWidget
@@ -62,8 +62,11 @@ class ResponseDialog(QDialog):
         # Connect signal
         self.ai_thread.start_one_iter.connect(self.append_html)
         self.ai_thread.new_text_ready.connect(self.append_text)
-        self.ai_thread.finished_gen_sound.connect(self.add_sound_play_bar)
-    
+        self.ai_thread.finished_gen_sound.connect(self.add_audio_player_widget)
+
+        # Audio sliders
+        self.audio_player_widget_dict = {}
+
     def append_text(self, new_text):
         self.curr_cursor.insertText(new_text)
         self.curr_cursor.movePosition(QTextCursor.End)
@@ -80,17 +83,22 @@ class ResponseDialog(QDialog):
         current_font_size = self.text_edit.font().pointSize()
         self.settings.setValue('FontSize', current_font_size)
 
-        # close thread
+        # close thread and release resources so that they can be deleted
         if hasattr(self.ai_thread, "sound_play_thread"):
             self.ai_thread.sound_play_thread.terminate()
+        for audio_player_widget in self.audio_player_widget_dict.values():
+            audio_player_widget.media_player.stop()
+            audio_player_widget.media_player.setSource(QUrl())
+            self.main_layout.removeWidget(audio_player_widget)
 
         # remove sound directory
-        try:
-            pass
-            # if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
-            #     shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
-        finally:
-            super().closeEvent(event)
+        # try:
+        #     # pass
+        #     if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
+        #         shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
+        # finally:
+        #     super().closeEvent(event)
+        super().closeEvent(event)
 
     def save_text(self):
         # Retrieve the last used path for text, or use home directory if none is stored
@@ -136,10 +144,22 @@ class ResponseDialog(QDialog):
             for filename in os.listdir(src_audio_dir):
                 if filename.endswith(".mp3"):
                     shutil.copy(os.path.join(src_audio_dir, filename), os.path.join(file_dir_path, filename))
-    
-    def add_sound_play_bar(self, filename):
-        sound_play_bar = AudioPlayerWidget(filename)
-        self.main_layout.addWidget(sound_play_bar)
+
+    def add_audio_player_widget(self, filename):
+        audio_player_widget = AudioPlayerWidget(filename)
+        i = int(filename.split("_")[-1].split(".")[0])
+        self.main_layout.addWidget(audio_player_widget)
+        self.audio_player_widget_dict[i] = audio_player_widget
+        if self.ai_thread.play_sound and i == 0:
+            self.audio_player_widget_dict[i].media_player.mediaStatusChanged.connect(lambda status: self.auto_play_audio(status, i + 1))
+            self.audio_player_widget_dict[i].play_audio()
+
+    def auto_play_audio(self, status, i):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self.audio_player_widget_dict[i - 1].media_player.mediaStatusChanged.disconnect()
+            if i + 1 < len(self.ai_thread.prompt_list):
+                self.audio_player_widget_dict[i].media_player.mediaStatusChanged.connect(lambda status: self.auto_play_audio(status, i + 1))
+            self.audio_player_widget_dict[i].play_audio()
 
 
 
@@ -171,10 +191,10 @@ class AudioPlayerWidget(QWidget):
         self.media_player.setSource(QUrl.fromLocalFile(filename))
         self.media_player.positionChanged.connect(self.update_seek_slider)
         self.media_player.durationChanged.connect(self.update_duration)
-        self.seek_slider.setMaximum(self.media_player.duration())
-
         self.audio = QAudioOutput()
         self.media_player.setAudioOutput(self.audio)
+
+        self.seek_slider.setMaximum(self.media_player.duration())
 
     def play_audio(self):
         self.media_player.play()

@@ -2,15 +2,14 @@ from aqt import mw, gui_hooks
 from aqt.qt import QAction, qconnect
 
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtCore import QThread, pyqtSignal, QUrl
-from PyQt6.QtMultimedia import QMediaPlayer, QMediaPlayer, QAudioOutput
-
+from PyQt6.QtCore import QThread, pyqtSignal
 import openai
 import os
 import asyncio
 import queue
 import time
 import threading
+import shutil
 
 from .anki import get_note_field_value_list
 from .ai import call_openai, make_edge_tts_mp3
@@ -43,7 +42,6 @@ class AIThread(QThread):
 
         self.field_value_list = None
         self.response_list = []
-        self.sound_play_thread = None
         self.play_sound = play_sound
         self.loop = loop
 
@@ -69,11 +67,6 @@ class AIThread(QThread):
 
     def response(self):
         delay_time = 0.01
-
-        if self.play_sound:
-            self.sound_play_thread = SoundPlayThread(AUDIO_FILE_QUEUE)
-            self.sound_play_thread.setTerminationEnabled(True)
-            self.sound_play_thread.start()
 
         response_str = ""
         for i, prompt in enumerate(self.prompt_list):
@@ -134,39 +127,17 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
             self.queue.put("#end")
 
 
-class SoundPlayThread(QThread):
-    def __init__(self, audio_file_queue):
-        super().__init__()
-        self.audio_file_queue = audio_file_queue
-        self.process = None
-
-    def run(self):
-        while True:
-            filename = self.audio_file_queue.get()
-            while not filename:
-                filename = self.audio_file_queue.get()
-                time.sleep(0.1)
-            if filename == "#end":
-                break
-            else:
-                try:
-                    if os.path.isfile(filename):
-                        media_player = QMediaPlayer()
-                        media_player.setSource(QUrl.fromLocalFile(filename))
-                        audio = QAudioOutput()
-                        media_player.setAudioOutput(audio)
-                        media_player.play()
-                finally:
-                    continue
-
-
 def gen_response(prompt_config, parent=None, response_dialog=None):
+    try:
+        if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
+            shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
+    finally:
+        pass
     if response_dialog:
         response_dialog.close()
         AUDIO_FILE_QUEUE.queue.clear()
     config = mw.addonManager.getConfig(__name__)
     prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
-    # regen_response(prompt_config, parent=parent)
 
     loop = asyncio.get_event_loop()
     ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"], loop)
