@@ -17,9 +17,10 @@ def call_openai(model, prompt, **kwargs):
     return completion
 
 
-def make_edge_tts_mp3(text, language, filename):
+def make_edge_tts_mp3(text, language, voice, filename):
     langcode = to_iso639_1(language)
-    voice = random.choice(EDGE_TTS_DICT.get(langcode))
+    if voice == "Random":
+        voice = random.choice(EDGE_TTS_DICT.get(langcode))
     communicate = edge_tts.Communicate(text, voice)
     # if os.path.isfile(filename):
     #     os.remove(filename)

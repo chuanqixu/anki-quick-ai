@@ -3,7 +3,8 @@
         "automatic_display": false,
         "shortcut": "Alt+A",
         "play_sound": true,
-        "default_sound_language": "English"
+        "default_sound_language": "English",
+        "default_edge_tts_voice": "en-US-AnaNeural"
     },
 
     "ai_config": {

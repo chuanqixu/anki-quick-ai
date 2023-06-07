@@ -1,6 +1,7 @@
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
 from .prompt_window import PromptNameTableDialog
-from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QComboBox
+from ..edge_tts_data import language_list, get_voice_list
 
 
 
@@ -22,11 +23,33 @@ def general_tab(conf_window: ConfigWindow) -> None:
     tab.text("Sound", bold=True)
 
     tab.checkbox("general.play_sound", "Generate and automatically play sound for response")
-    tab.text_input(
+
+    name_combo = tab.dropdown(
         "general.default_sound_language",
-        "Default Sound Language:",
-        tooltip="Default language for edge-tts sound generation.",
+        language_list,
+        language_list,
+        "Default edge-tts Language",
     )
+
+    default_language = conf.get("general.default_sound_language")
+    default_voice = conf.get("general.default_edge_tts_voice")
+    default_voice_list = get_voice_list(conf["general"]["default_sound_language"])
+    voice_combo = tab.dropdown(
+        "general.default_edge_tts_voice",
+        default_voice_list,
+        default_voice_list,
+        "Default edge-tts Voice",
+    )
+    voice_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+
+    def update_voice_combo(language):
+        if language in language_list:
+            voice_combo.clear()
+            voice_combo.insertItems(0, get_voice_list(language))
+        if language == default_language:
+            voice_combo.setCurrentText(default_voice)
+
+    name_combo.currentTextChanged.connect(update_voice_combo)
 
     # This adds a stretchable blank space.
     # If you are not sure what this does,

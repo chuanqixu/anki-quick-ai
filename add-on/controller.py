@@ -5,7 +5,6 @@ from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtCore import QThread, pyqtSignal
 import openai
 import os
-import asyncio
 import time
 import threading
 import shutil
@@ -14,6 +13,7 @@ from .anki import get_note_field_value_list
 from .ai import call_openai, make_edge_tts_mp3
 from .gui import RunDialog, ResponseDialog, conf
 from .utils import remove_html_tags, format_prompt_list, prompt_html, field_value_html
+from .edge_tts_data import get_voice_list
 
 
 
@@ -28,14 +28,16 @@ class AIThread(QThread):
 
     def __init__(self, prompt_config, ai_config=None, play_sound=None):
         super().__init__()
+        config = mw.addonManager.getConfig(__name__)
         self.ai_config = ai_config
         if not ai_config:
-            self.ai_config = mw.addonManager.getConfig(__name__)["ai_config"]
+            self.ai_config = config["ai_config"]
 
         self.query = prompt_config["query"]
         self.note_field = prompt_config["note_field"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
+        self.voice = config["general"]["default_edge_tts_voice"]
 
         self.field_value_list = None
         self.response_list = []
@@ -88,7 +90,11 @@ class AIThread(QThread):
         self.success = True
 
     def gen_sound(self, i, response_str, is_end):
-        sound_gen_thread = SoundGenThread(i, response_str, self.language_list[i], is_end, self)
+        language = self.language_list[i]
+        voice = self.voice
+        if voice not in get_voice_list(language):
+            voice = "Random"
+        sound_gen_thread = SoundGenThread(i, response_str, language, voice, is_end, self)
         sound_gen_thread.daemon = True
         sound_gen_thread.start()
     
@@ -98,11 +104,12 @@ class AIThread(QThread):
 
 
 class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will cause Anki to crash because of the async loop
-    def __init__(self, i, response_str, language, is_end, ai_thread):
+    def __init__(self, i, response_str, language, voice, is_end, ai_thread):
         super().__init__()
         self.i = i
         self.response_str = response_str
         self.language = language
+        self.voice = voice
         self.is_end = is_end
         self.ai_thread = ai_thread
 
@@ -112,7 +119,7 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
 
         response_str = remove_html_tags(self.response_str)
         filename = os.path.join(os.path.dirname(__file__), "output", f"response_{self.i}.mp3")
-        make_edge_tts_mp3(response_str, self.language, filename)
+        make_edge_tts_mp3(response_str, self.language, self.voice, filename)
         self.ai_thread.signal_finished_gen_sound(filename)
 
 

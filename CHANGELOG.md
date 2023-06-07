@@ -6,7 +6,7 @@
 
 
 
-### Version **1.0.2** 2023-06-03
+### Version **1.0.2** 2023-06-07
 
 Added
 
@@ -14,6 +14,7 @@ Added
 * Support multiple predefined prompt.
 * Run again button to generate new response.
 * Sliders for audio.
+* Specify edge-tts voice
 
 Changed
 

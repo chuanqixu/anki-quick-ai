@@ -45,39 +45,23 @@ There are several ways to run the add-on:
 
 ## Settings
 
-Double click "Tools->Add-ons->Anki Quick AI", and a config page with JSON data format will show. Some of the parameters may be effective after restarting Anki.
+Double click "Tools->Add-ons->Anki Quick AI", and a config page will show. Some of the parameters may be effective after restarting Anki. You should add "api_key" and "model" in the "AI" tag of the config page.
 
-1. ai_config:
-   1. api_key: API key for OpenAI.
-   2. model: OpenAI model to be used in this addon.
-2. query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
-3. note_field: The field whose values will be used to replace {response} placeholder in `prompt_list`. The note field can be found in "Browse->Note Types".
-4. prompt_list: A list of prompts that will be sent to OpenAI. In the prompt, you can use custom placeholders, which are sandwiched with `#`, e.x., `#language#`. Placeholders will be replaced before sending to OpenAI. It is designed for you to quickly change the prompt.
-   1. `#field_value#`: This will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`.
+For usage, you should create your default prompt settings in the "prompt" tag of the config page. The settings are the following:
+
+
+
+1. Prompt Name: A name for this prompt configuration.
+2. Default Browse Query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
+3. Default Note Field: The field whose values will be used to replace {response} placeholder in `prompt_list`. The note field can be found in "Browse->Note Types".
+4. Prompt: A list of prompts that will be sent to OpenAI. In the prompt, you can use custom placeholders, which are sandwiched with `#`, e.x., `#language#`. Placeholders will be replaced before sending to OpenAI. It is designed for you to quickly change the prompt.
+   1. `#field_value#`: **This is a keyword**. This will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`.
    2. `#response#`: **This is a keyword**. This will be replaced with the previous response from OpenAI.
    3. `#language#`: **This is a keyword**. This will be replaced with `language_list` in the settings. See below.
    4. `#custom#`: You can specify your custom placeholder. This will be replaced with the value you set in `placeholder`, see below. **Do not specify "field_value", "response", or "language" as the name, since they have their special usage.**
 5. placeholder: A dict contains customized placeholders. The key is the name of the placeholder. The value is another dict, whose key is the index of the prompt that will be replaced, and the value is the string to replace the placeholder. **You cannot and do not need to specify "field_value", "response", or "language".**
+6.language: Languages for the generated audio.
 
-   For example:
-   ```json
-   "prompt_list": [
-      "My first name is #my_name#",
-      "My last name is #my_name#"
-   ],
-   "placeholder": {
-      "my_name": {
-         "0": "Hello",
-         "1": "World"
-      }
-   }
-   ```
-   The placeholder means in the 0th prompt, `#my_name#` will be replaced with `Hello`, and in the 1st prompt, `#my_name#` will be replaced with `World`.
-
-6. language_list: A list of languages corresponding to the sound for each response. Also, it will be used to replace the placeholder `#language#` in the prompt.
-7. play_sound: Whether to use [edge-tts](https://github.com/rany2/edge-tts) to generate the sound of the response from OpenAI.
-8.  automatic_display: Whether to automatically show the window choosing whether to run the addon when changing to the main page.
-9.  shortcut: Shortcut to run the add-on. Do not be in conflict with other shortcuts.
 
 
 ## Setup (Optional)
@@ -94,12 +78,30 @@ pip install -r requirements.txt --target lib
 
 Please find in [CHANGELOG.md](./CHANGELOG.md).
 
+### Version **1.0.2** 2023-06-07
+
+Added
+
+* Add configuration GUI. Now configuration is more clear and straightforward!
+* Support multiple predefined prompt.
+* Run again button to generate new response.
+* Sliders for audio.
+* Specify edge-tts voice
+
+Changed
+
+* Now can quickly change prompt and placeholder before running.
+
+Fixed
+
+* Sometimes it does not have permission to override the sound file.
+
 ### Version **1.0.2** 2023-05-30
 
 Added
 
-* Now support streamed and real time response.
-* Add button to save texts and audio files at the end of the dialog.
+* Now support streamed and real-time response.
+* Add buttons to save texts and audio files at the end of the dialog.
 
 Changed
 
@@ -147,4 +149,6 @@ This repository is under [AGPL 3.0](./LICENSE) required by AnkiWeb for Anki Add-
 ## Acknowledgement
 
 Thanks for the inspiration and code in [yihong0618/duolingo_remember](https://github.com/yihong0618/duolingo_remember) and [yihong0618/shanbay_remember](https://github.com/yihong0618/shanbay_remember).
+
+Thanks for [BlueGreenMagick/ankiaddonconfig](https://github.com/BlueGreenMagick/ankiaddonconfig) for configuration window.
 

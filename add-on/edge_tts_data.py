@@ -1,3 +1,7 @@
+import iso639, copy
+
+
+
 EDGE_TTS_DICT = {
     "af": ["af-ZA-AdriNeural", "af-ZA-WillemNeural"],
     "am": ["am-ET-AmehaNeural", "am-ET-MekdesNeural"],
@@ -262,3 +266,17 @@ EDGE_TTS_DICT = {
     ],
     "zu": ["zu-ZA-ThandoNeural", "zu-ZA-ThembaNeural"],
 }
+
+language_list = []
+for lang_code in EDGE_TTS_DICT:
+    language = iso639.find(lang_code)['name']
+    language = language.split(";")[0].split(",")[0]
+    language_list.append(language)
+
+language_list.sort()
+
+def get_voice_list(language):
+    lang_code = iso639.to_iso639_1(language)
+    voice_list = copy.deepcopy(EDGE_TTS_DICT[lang_code])
+    voice_list.insert(0, "Random")
+    return voice_list
