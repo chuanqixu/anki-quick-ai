@@ -6,7 +6,6 @@ from PyQt6.QtCore import QThread, pyqtSignal
 import openai
 import os
 import asyncio
-import queue
 import time
 import threading
 import shutil
@@ -20,8 +19,6 @@ from .utils import remove_html_tags, format_prompt_list, prompt_html, field_valu
 
 IS_BROWSE_OPEN = False
 
-AUDIO_FILE_QUEUE = queue.Queue()
-
 class AIThread(QThread):
     field_value_ready = pyqtSignal(list)
     new_text_ready = pyqtSignal(str)
@@ -29,7 +26,7 @@ class AIThread(QThread):
     finished_one_iter = pyqtSignal(int, str, bool)
     finished_gen_sound = pyqtSignal(str)
 
-    def __init__(self, prompt_config, ai_config=None, play_sound=None, loop=None):
+    def __init__(self, prompt_config, ai_config=None, play_sound=None):
         super().__init__()
         self.ai_config = ai_config
         if not ai_config:
@@ -43,7 +40,6 @@ class AIThread(QThread):
         self.field_value_list = None
         self.response_list = []
         self.play_sound = play_sound
-        self.loop = loop
 
         self.success = False
 
@@ -92,7 +88,7 @@ class AIThread(QThread):
         self.success = True
 
     def gen_sound(self, i, response_str, is_end):
-        sound_gen_thread = SoundGenThread(i, response_str, self.language_list, self.loop, AUDIO_FILE_QUEUE, is_end, self)
+        sound_gen_thread = SoundGenThread(i, response_str, self.language_list[i], is_end, self)
         sound_gen_thread.daemon = True
         sound_gen_thread.start()
     
@@ -100,14 +96,13 @@ class AIThread(QThread):
         self.finished_gen_sound.emit(filename)
 
 
+
 class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will cause Anki to crash because of the async loop
-    def __init__(self, i, response_str, language_list, loop, queue, is_end, ai_thread):
+    def __init__(self, i, response_str, language, is_end, ai_thread):
         super().__init__()
         self.i = i
         self.response_str = response_str
-        self.language_list = language_list
-        self.loop = loop
-        self.queue = queue
+        self.language = language
         self.is_end = is_end
         self.ai_thread = ai_thread
 
@@ -117,14 +112,9 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
 
         response_str = remove_html_tags(self.response_str)
         filename = os.path.join(os.path.dirname(__file__), "output", f"response_{self.i}.mp3")
-        make_edge_tts_mp3(response_str, self.language_list[self.i], filename, self.loop)
-
-        self.queue.put(filename)
-
+        make_edge_tts_mp3(response_str, self.language, filename)
         self.ai_thread.signal_finished_gen_sound(filename)
 
-        if self.is_end:
-            self.queue.put("#end")
 
 
 def gen_response(prompt_config, parent=None, response_dialog=None):
@@ -135,12 +125,11 @@ def gen_response(prompt_config, parent=None, response_dialog=None):
         pass
     if response_dialog:
         response_dialog.close()
-        AUDIO_FILE_QUEUE.queue.clear()
+
     config = mw.addonManager.getConfig(__name__)
     prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
 
-    loop = asyncio.get_event_loop()
-    ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"], loop)
+    ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"])
     ai_thread.start()
 
     def show_dialog(field_value_list):

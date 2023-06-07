@@ -1,6 +1,6 @@
 {
     "general": {
-        "automatic_display": true,
+        "automatic_display": false,
         "shortcut": "Alt+A",
         "play_sound": true,
         "default_sound_language": "English"

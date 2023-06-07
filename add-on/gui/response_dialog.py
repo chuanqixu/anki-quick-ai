@@ -167,12 +167,11 @@ class AudioPlayerWidget(QWidget):
     def __init__(self, filename):
         super().__init__()
 
+        self.is_playing = False
+
         # Create play and pause buttons
         self.play_button = QPushButton('Play')
         self.play_button.clicked.connect(self.play_audio)
-
-        self.pause_button = QPushButton('Pause')
-        self.pause_button.clicked.connect(self.pause_audio)
 
         # Create slider
         self.seek_slider = QSlider(Qt.Orientation.Horizontal)
@@ -181,7 +180,6 @@ class AudioPlayerWidget(QWidget):
         # Set layout
         layout = QHBoxLayout()
         layout.addWidget(self.play_button)
-        layout.addWidget(self.pause_button)
         layout.addWidget(self.seek_slider)
 
         self.setLayout(layout)
@@ -197,10 +195,11 @@ class AudioPlayerWidget(QWidget):
         self.seek_slider.setMaximum(self.media_player.duration())
 
     def play_audio(self):
-        self.media_player.play()
-
-    def pause_audio(self):
-        self.media_player.pause()
+        if self.is_playing:
+            self.media_player.pause()
+        else:
+            self.media_player.play()
+        self.is_playing = not self.is_playing
 
     def seek_audio(self, position):
         self.media_player.setPosition(position)
