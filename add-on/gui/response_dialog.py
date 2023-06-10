@@ -1,10 +1,19 @@
 import os, shutil
 
-from PyQt6.QtCore import Qt, QSettings, QDir, QFileInfo, QUrl, QSize
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QDialog, QTextEdit, QFileDialog, QSlider, QWidget, QSpacerItem, QScrollArea
-from PyQt6.QtGui import QTextCursor
+from PyQt6.QtCore import Qt, QSettings, QDir, QFileInfo, QUrl, pyqtSignal, QRunnable, QThreadPool, pyqtSlot
+from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QDialog, QTextEdit, QFileDialog, QSlider, QWidget, QSpacerItem, QScrollArea, QSizePolicy
+from PyQt6.QtGui import QTextCursor, QFontMetrics
 from PyQt6.QtMultimedia import QMediaPlayer, QMediaPlayer, QAudioOutput
 
+
+class PromptRunnable(QRunnable):
+    def __init__(self, func):
+        super().__init__()
+        self.func = func
+
+    @pyqtSlot()
+    def run(self):
+        self.func()
 
 
 class ResponseDialog(QDialog):
@@ -12,19 +21,14 @@ class ResponseDialog(QDialog):
         super().__init__(parent)
         self.ai_thread = ai_thread
         self.response_widget_list = []
-
         self.settings = QSettings('Anki', 'Anki Quick AI')
+        self.saved_font_size = self.settings.value('FontSize')
 
-        self.field_value_text_edit = AutoExpandingTextEdit(self)
-        self.field_value_text_edit.setHtml(initial_text)
-        self.field_value_text_edit.setReadOnly(True)
-
-        self.curr_cursor = self.field_value_text_edit.textCursor()
-        self.curr_cursor.movePosition(QTextCursor.End)
+        self.field_value_widget = ResponseWidget(initial_text, self, self.saved_font_size, False)
 
         self.response_scroll_widget = QWidget()
         self.response_layout = QVBoxLayout(self.response_scroll_widget)
-        self.response_layout.addWidget(self.field_value_text_edit)
+        self.response_layout.addWidget(self.field_value_widget)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)  # Allow the widget to resize
@@ -49,9 +53,13 @@ class ResponseDialog(QDialog):
         button_layout.addWidget(self.regen_button)
         button_layout.addWidget(self.save_audio_button)
 
+        self.prompt_text_edit = PromptTextEdit("Input new prompt here", self, self.saved_font_size)
+        self.prompt_text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
         self.main_layout = QVBoxLayout(self)
         # self.main_layout.addLayout(self.response_layout)
         self.main_layout.addWidget(self.scroll_area)
+        self.main_layout.addWidget(self.prompt_text_edit)
         self.main_layout.addLayout(button_layout)
 
         # Restore the previous size of the dialog
@@ -60,13 +68,6 @@ class ResponseDialog(QDialog):
             self.resize(size)
         else:
             self.resize(800, 600)  # Set default size
-        
-        # Restore the previous font size of the text edit
-        font = self.field_value_text_edit.font()
-        self.saved_font_size = self.settings.value('FontSize')
-        if self.saved_font_size:
-            font.setPointSize(int(self.saved_font_size))
-            self.field_value_text_edit.setFont(font)
 
         self.setWindowModality(Qt.NonModal)
 
@@ -74,6 +75,7 @@ class ResponseDialog(QDialog):
         self.ai_thread.start_one_iter.connect(self.new_response_widget)
         self.ai_thread.new_text_ready.connect(self.append_text)
         self.ai_thread.finished_gen_sound.connect(self.add_audio_player_widget)
+        self.prompt_text_edit.new_prompt_signal.connect(self.input_prompt)
 
         # Audio sliders
         self.audio_player_widget_dict = {}
@@ -82,12 +84,8 @@ class ResponseDialog(QDialog):
         self.response_widget_list[-1].append_text(new_text)
 
     def new_response_widget(self, prompt):
-        response_widget = ResponseWidget(prompt, self)
+        response_widget = ResponseWidget(prompt, self, self.saved_font_size)
         self.response_widget_list.append(response_widget)
-        if self.saved_font_size:
-            font = response_widget.text_edit.font()
-            font.setPointSize(int(self.saved_font_size))
-            response_widget.text_edit.setFont(font)
 
         for i in reversed(range(self.response_layout.count())):
             item = self.response_layout.itemAt(i)
@@ -98,12 +96,16 @@ class ResponseDialog(QDialog):
         self.response_layout.addWidget(response_widget)
         self.response_layout.addStretch()
 
+    def input_prompt(self, prompt):
+        runnable = PromptRunnable(lambda: self.ai_thread.response(prompt))
+        QThreadPool.globalInstance().start(runnable)
+
     def closeEvent(self, event):
         # Save the current size of the dialog when it's closed
         self.settings.setValue('DialogSize', self.size())
 
         # Save the current font size of the text edit
-        font_size_to_save = self.field_value_text_edit.font().pointSize()
+        font_size_to_save = self.field_value_widget.text_edit.font().pointSize()
         for reponse_widget in self.response_widget_list:
             font_size = reponse_widget.text_edit.font().pointSize()
             if font_size > font_size_to_save:
@@ -144,7 +146,7 @@ class ResponseDialog(QDialog):
             self.settings.setValue('LastTextPath', QFileInfo(file_path).path())
             self.settings.setValue('LastTextFile', dest_file)
 
-            text = self.field_value_text_edit.toPlainText()
+            text = self.field_value_widget.text_edit.toPlainText()
             text += "\n"
             for response_widget in self.response_widget_list:
                 text += f"\n{response_widget.text_edit.toPlainText()}\n"
@@ -180,7 +182,7 @@ class ResponseDialog(QDialog):
         audio_player_widget = AudioPlayerWidget(filename)
         i = int(filename.split("_")[-1].split(".")[0])
         # self.main_layout.addWidget(audio_player_widget)
-        self.response_widget_list[i].main_layout.addWidget(audio_player_widget)
+        self.response_widget_list[i].add_audio_player_widget(audio_player_widget)
         self.audio_player_widget_dict[i] = audio_player_widget
         if self.ai_thread.play_sound and i == 0:
             self.audio_player_widget_dict[i].media_player.mediaStatusChanged.connect(lambda status: self.auto_play_audio(status, i + 1))
@@ -198,48 +200,43 @@ class ResponseDialog(QDialog):
 
 
 
-class AutoExpandingTextEdit(QTextEdit):
-    def sizeHint(self):
-        doc_height = self.document().size().height()
-        frame_width = self.frameWidth() * 2
-        return QSize(self.width(), doc_height + frame_width)
-
-
-
 class ResponseWidget(QWidget):
-    def __init__(self, prompt=None, parent=None):
+    def __init__(self, prompt=None, parent=None, font_size=None, add_spacer=True):
         super().__init__(parent)
         self.main_layout = QVBoxLayout(self)
 
-        self.text_edit = AutoExpandingTextEdit(self)
+        self.text_edit = QTextEdit(self)
+        self.text_edit.textChanged.connect(self.adjust_height)
         self.text_edit.setHtml(prompt)
         self.text_edit.setReadOnly(True)
-        self.text_edit.textChanged.connect(self.adjust_height)
+
+        if font_size:
+            font = self.text_edit.font()
+            font.setPointSize(int(font_size))
+            self.text_edit.setFont(font)
+        self.fm = QFontMetrics(self.font())
+        self.text_edit.setMinimumHeight(self.fm.lineSpacing() * 6)
 
         self.main_layout.addWidget(self.text_edit)
         self.curr_cursor = self.text_edit.textCursor()
         self.curr_cursor.movePosition(QTextCursor.End)
+
+        if add_spacer:
+            spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            self.main_layout.addItem(spacer)
 
     def append_text(self, new_text):
         self.curr_cursor.insertText(new_text)
         self.curr_cursor.movePosition(QTextCursor.End)
 
     def adjust_height(self):
-        doc = self.text_edit.document()
-        layout = doc.documentLayout()
+        doc_height = self.text_edit.document().size().height()
+        if self.text_edit.height() != doc_height:
+            self.text_edit.setMinimumHeight(doc_height + 10)
 
-        margins = self.text_edit.contentsMargins()
-        extra = margins.top() + margins.bottom()
-
-        # Calculate the height of all text in the QTextEdit.
-        height = 0
-        block = doc.begin()
-        while block.isValid():
-            height += layout.blockBoundingRect(block).height()
-            block = block.next()
-
-        # Set the minimum height.
-        self.text_edit.setMinimumHeight(height + 10 + extra)
+    def add_audio_player_widget(self, audio_player_widget):
+        self.main_layout.removeItem(self.main_layout.itemAt(self.main_layout.count() - 1))
+        self.main_layout.addWidget(audio_player_widget)
 
 
 
@@ -289,3 +286,51 @@ class AudioPlayerWidget(QWidget):
 
     def update_duration(self, duration):
         self.seek_slider.setRange(0, duration)
+
+
+
+class PromptTextEdit(QTextEdit):
+    new_prompt_signal = pyqtSignal(str)
+
+    def __init__(self, instruction_text="", parent=None, font_size=None):
+        super().__init__(parent)
+        self.font_size = font_size
+        if font_size:
+            font = self.font()
+            font.setPointSize(int(font_size))
+            self.setFont(font)
+        self.fm = QFontMetrics(self.font())
+
+        self.instruction_text = instruction_text
+        self.has_instruction = True
+        self.setText(instruction_text)
+        self.document().contentsChanged.connect(self.clear_instruction)
+
+        self.setFixedHeight(self.fm.lineSpacing() + 10)
+
+        self.setLineWrapMode(QTextEdit.WidgetWidth)
+        self.textChanged.connect(self.adjust_height)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            if not (event.modifiers() & Qt.ShiftModifier):
+                event.accept()
+                self.new_prompt_signal.emit(self.toPlainText())
+                self.clear()
+                self.setFixedHeight(self.fm.lineSpacing() + 10)
+            else:
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
+
+    def clear_instruction(self):
+        if self.has_instruction:
+            self.has_instruction = False
+            self.clear()
+
+    def adjust_height(self):
+        doc_height = self.document().size().height()
+        max_height = self.fm.lineSpacing() * 5
+        new_height = min(max_height, doc_height)
+        if self.height() != new_height:
+            self.setFixedHeight(new_height)

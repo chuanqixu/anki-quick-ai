@@ -8,7 +8,7 @@
 
 Added
 
-*
+* Interaction with OpenAI in the response dialog.
 
 Changed
 
@@ -22,7 +22,7 @@ Added
 * Support multiple predefined prompt.
 * Run again button to generate new response.
 * Sliders for audio.
-* Specify edge-tts voice
+* Specify edge-tts voice.
 
 Changed
 
@@ -71,4 +71,4 @@ Fixed
 
 ### Version **1.0.0** -- 2023-05-22
 
-First Version
+First Version.

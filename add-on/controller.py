@@ -19,6 +19,8 @@ from .edge_tts_data import get_voice_list
 
 IS_BROWSE_OPEN = False
 
+
+
 class AIThread(QThread):
     field_value_ready = pyqtSignal(list)
     new_text_ready = pyqtSignal(str)
@@ -37,6 +39,7 @@ class AIThread(QThread):
         self.note_field = prompt_config["note_field"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
+        self.default_language = config["general"]["default_sound_language"]
         self.voice = config["general"]["default_edge_tts_voice"]
 
         self.field_value_list = None
@@ -61,12 +64,13 @@ class AIThread(QThread):
         openai.api_key = self.api_key
         self.initial_response()
 
-    def response(self, response_idx, prompt):
+    def response(self, prompt):
+        response_idx = len(self.response_list)
         prompt_html_str = prompt_html(prompt, "green")
         self.start_one_iter.emit(prompt_html_str)
         prompt = prompt.replace(f"#field_value#", str(self.field_value_list))
         if response_idx > 0:
-            prompt = prompt.replace(f"#response#", self.response_list[response_idx - 1])
+            prompt = prompt.replace(f"#response#", self.response_list[-1])
 
         response = call_openai(self.model, prompt, **self.ai_config)
 
@@ -83,14 +87,19 @@ class AIThread(QThread):
         self.response_list.append(response_str)
 
     def initial_response(self):
-        for i, prompt in enumerate(self.prompt_list):
-            self.response(i, prompt)
+        for prompt in self.prompt_list:
+            self.response(prompt)
 
     def gen_sound(self, i, response_str):
-        language = self.language_list[i]
-        voice = self.voice
-        if voice not in get_voice_list(language):
+        if i < len(self.language_list):
+            language = self.language_list[i]
+            voice = self.voice
+            if voice not in get_voice_list(language):
+                voice = "Random"
+        else:
+            language = self.default_language
             voice = "Random"
+        
         sound_gen_thread = SoundGenThread(i, response_str, language, voice, self)
         sound_gen_thread.daemon = True
         sound_gen_thread.start()

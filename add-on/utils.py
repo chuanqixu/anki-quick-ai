@@ -26,7 +26,7 @@ def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
 
 
 def prompt_html(prompt, color):
-    return f"<br><br><font color='{color}'>Prompt:<br>{prompt}</font><br><br>"
+    return f"<font color='{color}'>Prompt:{prompt}</font><br><br>"
 
 
 def field_value_html(field_value_list, color):
