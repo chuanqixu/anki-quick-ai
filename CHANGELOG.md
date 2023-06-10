@@ -4,9 +4,17 @@
 
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
+### Version **1.0.3** 2023-06-10
 
+Added
 
-### Version **1.0.2** 2023-06-07
+*
+
+Changed
+
+* Move audio widget below each response widget.
+
+### Version **1.0.3** 2023-06-07
 
 Added
 

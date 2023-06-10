@@ -23,7 +23,7 @@ class AIThread(QThread):
     field_value_ready = pyqtSignal(list)
     new_text_ready = pyqtSignal(str)
     start_one_iter = pyqtSignal(str)
-    finished_one_iter = pyqtSignal(int, str, bool)
+    finished_one_iter = pyqtSignal(int, str)
     finished_gen_sound = pyqtSignal(str)
 
     def __init__(self, prompt_config, ai_config=None, play_sound=None):
@@ -43,14 +43,12 @@ class AIThread(QThread):
         self.response_list = []
         self.play_sound = play_sound
 
-        self.success = False
+        self.delay_time = 0.01
 
         if self.play_sound:
             self.finished_one_iter.connect(self.gen_sound)
 
     def run(self):
-        self.success = False
-
         self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field)
         self.field_value_ready.emit(self.field_value_list)
 
@@ -61,40 +59,39 @@ class AIThread(QThread):
         self.model = self.ai_config.pop("model")
 
         openai.api_key = self.api_key
-        self.response()
+        self.initial_response()
 
-    def response(self):
-        delay_time = 0.01
+    def response(self, response_idx, prompt):
+        prompt_html_str = prompt_html(prompt, "green")
+        self.start_one_iter.emit(prompt_html_str)
+        prompt = prompt.replace(f"#field_value#", str(self.field_value_list))
+        if response_idx > 0:
+            prompt = prompt.replace(f"#response#", self.response_list[response_idx - 1])
+
+        response = call_openai(self.model, prompt, **self.ai_config)
 
         response_str = ""
+        for event in response: 
+            event_text = event['choices'][0]['delta']
+            new_text = event_text.get('content', '')
+            self.new_text_ready.emit(new_text)
+            response_str += new_text
+            time.sleep(self.delay_time)
+
+        if self.play_sound:
+            self.finished_one_iter.emit(response_idx, response_str)
+        self.response_list.append(response_str)
+
+    def initial_response(self):
         for i, prompt in enumerate(self.prompt_list):
-            prompt_html_str = prompt_html(prompt, "green")
-            self.start_one_iter.emit(prompt_html_str)
-            prompt = prompt.replace(f"#field_value#", str(self.field_value_list))
-            prompt = prompt.replace(f"#response#", response_str)
+            self.response(i, prompt)
 
-            response = call_openai(self.model, prompt, **self.ai_config)
-
-            response_str = ""
-            for event in response: 
-                event_text = event['choices'][0]['delta']
-                new_text = event_text.get('content', '')
-                self.new_text_ready.emit(new_text)
-                response_str += new_text
-                time.sleep(delay_time)
-
-            if self.play_sound:
-                self.finished_one_iter.emit(i, response_str, i == len(self.prompt_list) - 1)
-            self.response_list.append(response_str)
-
-        self.success = True
-
-    def gen_sound(self, i, response_str, is_end):
+    def gen_sound(self, i, response_str):
         language = self.language_list[i]
         voice = self.voice
         if voice not in get_voice_list(language):
             voice = "Random"
-        sound_gen_thread = SoundGenThread(i, response_str, language, voice, is_end, self)
+        sound_gen_thread = SoundGenThread(i, response_str, language, voice, self)
         sound_gen_thread.daemon = True
         sound_gen_thread.start()
     
@@ -104,13 +101,12 @@ class AIThread(QThread):
 
 
 class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will cause Anki to crash because of the async loop
-    def __init__(self, i, response_str, language, voice, is_end, ai_thread):
+    def __init__(self, i, response_str, language, voice, ai_thread):
         super().__init__()
         self.i = i
         self.response_str = response_str
         self.language = language
         self.voice = voice
-        self.is_end = is_end
         self.ai_thread = ai_thread
 
     def run(self):
