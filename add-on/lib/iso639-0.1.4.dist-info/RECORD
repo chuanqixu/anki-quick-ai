@@ -6,5 +6,5 @@ iso639-0.1.4.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hS
 iso639-0.1.4.dist-info/WHEEL,sha256=2wepM1nk4DS4eFpYrW1TTqPcoGNfHhhO_i5m4cOimbo,92
 iso639-0.1.4.dist-info/top_level.txt,sha256=phLVuJxujEeJhkT0hgTMQiSvs3UVIIwVHW4lbuJdCb0,7
 iso639/__init__.py,sha256=gzQfNAzHrsc-TSzJ8Bmt4lO3prQZU4zYC_sHpSQSMig,3992
-iso639/__pycache__/__init__.cpython-311.pyc,,
+iso639/__pycache__/__init__.cpython-310.pyc,,
 iso639/languages_utf-8.txt,sha256=gn6-I0jL5HkWhCvI5EAdm-6MiNpnR-PwbinIgqNcm6c,13155

@@ -4,7 +4,9 @@
 
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
-### Version **1.0.3** 2023-06-10
+
+
+### Version **1.0.4** 2023-06-12
 
 Added
 

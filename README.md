@@ -78,6 +78,17 @@ pip install -r requirements.txt --target lib
 
 Please find in [CHANGELOG.md](./CHANGELOG.md).
 
+### Version **1.0.4** 2023-06-12
+
+Added
+
+* Interaction with OpenAI in the response dialog.
+
+Changed
+
+* Move audio widget below each response widget.
+
+
 ### Version **1.0.3** 2023-06-07
 
 Added
