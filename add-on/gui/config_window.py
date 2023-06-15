@@ -1,7 +1,10 @@
+import openai
+from PyQt6.QtWidgets import QComboBox
+
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
 from .prompt_window import PromptNameTableDialog
-from PyQt6.QtWidgets import QComboBox
 from ..edge_tts_data import language_list, get_voice_list
+from ..ai import get_avail_chat_model_list
 
 
 
@@ -77,17 +80,35 @@ def ai_tab(conf_window: ConfigWindow) -> None:
 
     tab.text("Required", bold=True)
 
-    tab.text_input(
+    default_api_key = conf.get("ai_config.api_key")
+    api_key_text_input = tab.text_input(
         "ai_config.api_key",
         "OpenAI API Key:",
         tooltip="Please go to OpenAI website to see how to acquire the key",
     )
 
-    tab.text_input(
+    default_avail_chat_model_list = get_avail_chat_model_list(default_api_key)
+    if len(default_avail_chat_model_list) == 0:
+        default_avail_chat_model_list = ["API Key is not valid"]
+    model_combo = tab.dropdown(
         "ai_config.model",
+        default_avail_chat_model_list,
+        default_avail_chat_model_list,
         "Model:",
         tooltip="Default is gpt-3.5-turbo",
     )
+
+    def update_model(api_key):
+        avail_chat_model_list = get_avail_chat_model_list(api_key)
+        if len(avail_chat_model_list) == 0:
+            avail_chat_model_list = ["API Key is not valid"]
+
+        model_combo.clear()
+        model_combo.insertItems(0, avail_chat_model_list)
+        if api_key == default_api_key:
+            model_combo.setCurrentText(conf.get("ai_config.model"))
+
+    api_key_text_input.textChanged.connect(update_model)
 
     tab.space(20)
     tab.text("Advanced", bold=True)
@@ -130,7 +151,8 @@ def ai_tab(conf_window: ConfigWindow) -> None:
     # This adds a stretchable blank space.
     # If you are not sure what this does,
     # Try resizing the config window without this line
-    tab.stretch() 
+    tab.stretch()
+
 
 
 conf.use_custom_window()

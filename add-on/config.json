@@ -9,7 +9,7 @@
 
     "ai_config": {
         "api_key": "",
-        "model": "gpt-3.5-turbo",
+        "model": "API Key is not valid",
         "temperature": 1.0,
         "max_tokens": 2048,
         "presence_penalty": 0,
@@ -20,6 +20,7 @@
         "Words Story": {
             "default_query": "\"deck:current\" introduced:1",
             "default_note_field": "Front",
+            "system_prompt": "You are a helpful assistant.",
             "prompt": [
                 "I am going to remember these words: #field_value#. I want you do the following two things to help me remember these words. The first step is to list these words and their translation in #trans_lang#, one word per line. The second step is to write a creative and interesting story in #language# which is less than #num_words# words. Please make sure you include these words in the story. Feel free to conjugate these words to make the story creative and interesting. Do not translate the story.",
                 "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. Do not maintain the first parts containing words and their translation, and only translate the story. The text to be translated is:\n#response#"

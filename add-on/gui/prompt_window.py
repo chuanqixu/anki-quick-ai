@@ -145,29 +145,42 @@ class PromptConfigDialog(QDialog):
         if not in_run_dialog:
             # Prompt
             input_layout = QHBoxLayout()
-            label = QLabel("Prompt Name:")
+            label = QLabel("<b>Prompt Name:</b>")
             input_layout.addWidget(label)
             self.input_field_prompt_name = QLineEdit(prompt_name)
             input_layout.addWidget(self.input_field_prompt_name)
             layout.addLayout(input_layout)
+            layout.addSpacing(10)
 
             # Browse query
             input_layout = QHBoxLayout()
-            label = QLabel("Default Browse Query:")
+            label = QLabel("<b>Default Browse Query:</b>")
             input_layout.addWidget(label)
             query = self.prompt_config_data["default_query"] if self.prompt_config_data else None
             self.input_field_browse_query = QLineEdit(query)
             input_layout.addWidget(self.input_field_browse_query)
             layout.addLayout(input_layout)
+            layout.addSpacing(10)
 
             # Note field
             input_layout = QHBoxLayout()
-            label = QLabel("Default Note Field:")
+            label = QLabel("<b>Default Note Field:</b>")
             input_layout.addWidget(label)
             note_field = self.prompt_config_data["default_note_field"] if self.prompt_config_data else None
             self.input_field_note_field = QLineEdit(note_field)
             input_layout.addWidget(self.input_field_note_field)
             layout.addLayout(input_layout)
+            layout.addSpacing(10)
+
+        # System Prompt
+        input_layout = QVBoxLayout()
+        label = QLabel("<b>System Prompt:</b>")
+        input_layout.addWidget(label)
+        system_prompt_text_edit = self.prompt_config_data["system_prompt"] if self.prompt_config_data else None
+        self.system_prompt_text_edit = QTextEdit(system_prompt_text_edit)
+        input_layout.addWidget(self.system_prompt_text_edit)
+        layout.addLayout(input_layout)
+        layout.addSpacing(10)
 
         # Prompt
         prompt_list = self.prompt_config_data["prompt"] if self.prompt_config_data else None
@@ -178,6 +191,7 @@ class PromptConfigDialog(QDialog):
         layout.addWidget(self.prompt_table_dialog)
         label = QLabel("Keyword placeholder:\n#field_value#: values in cards.\n#response#: previous response from OpenAI.\n#language#: language specified below.")
         layout.addWidget(label)
+        layout.addSpacing(10)
 
         # Placeholder
         placeholder_dict = self.prompt_config_data["placeholder"] if self.prompt_config_data else None
@@ -185,6 +199,7 @@ class PromptConfigDialog(QDialog):
         layout.addWidget(self.placeholder_table_dialog)
         label = QLabel("Placeholder should be used in prompts inside ##.\nEx., #p# is replaced with placeholder named \"p\".")
         layout.addWidget(label)
+        layout.addSpacing(10)
 
         # Language list
         language_list = self.prompt_config_data["language"] if self.prompt_config_data else None
@@ -192,6 +207,7 @@ class PromptConfigDialog(QDialog):
         layout.addWidget(self.language_table_dialog)
         label = QLabel("Language can be used in prompts as placeholder with #language#.\nThis will be used as the language for sound generation for prompts.\nThe order is corresponding to prompts' order.")
         layout.addWidget(label)
+        layout.addSpacing(10)
 
         button_layout = QHBoxLayout()
         # save button
@@ -215,6 +231,7 @@ class PromptConfigDialog(QDialog):
         if not self.in_run_dialog:
             self.prompt_config_data["default_query"] = self.input_field_browse_query.text()
             self.prompt_config_data["default_note_field"] = self.input_field_note_field.text()
+        self.prompt_config_data["system_prompt"] = self.system_prompt_text_edit.toPlainText()
         self.prompt_config_data["prompt"] = self.prompt_table_dialog.data
         self.prompt_config_data["placeholder"] = self.placeholder_table_dialog.placeholder_dict
         self.prompt_config_data["language"] = self.language_table_dialog.data
@@ -276,12 +293,12 @@ class TableDialog(QDialog):
         if button:
             self.add_button = QPushButton('Add')
             self.add_button.clicked.connect(self.create_item)
-            self.add_button.setFixedSize(80, 35)
+            self.add_button.setFixedSize(90, 30)
             self.title_layout.addWidget(self.add_button)
 
             self.delete_button = QPushButton('Delete')
             self.delete_button.clicked.connect(self.delete_item)
-            self.delete_button.setFixedSize(80, 35)
+            self.delete_button.setFixedSize(90, 30)
             self.title_layout.addWidget(self.delete_button)
 
         self.main_layout.addLayout(self.title_layout)

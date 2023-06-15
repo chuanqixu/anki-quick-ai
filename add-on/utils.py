@@ -26,7 +26,7 @@ def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
 
 
 def prompt_html(prompt, color):
-    return f"<font color='{color}'>Prompt:{prompt}</font><br><br>"
+    return f"<font color='{color}'>Prompt: {prompt}</font><br><br>"
 
 
 def field_value_html(field_value_list, color):
@@ -42,5 +42,5 @@ def find_placeholder(prompt):
     # Ignore keyword placeholders
     ignore_list = ['response', 'field_value', 'language']
     matches = [match for match in matches if match not in ignore_list]
-    
+
     return matches

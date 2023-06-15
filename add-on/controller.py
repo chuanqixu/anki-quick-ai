@@ -37,6 +37,7 @@ class AIThread(QThread):
 
         self.query = prompt_config["query"]
         self.note_field = prompt_config["note_field"]
+        self.system_prompt = prompt_config["system_prompt"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
         self.default_language = config["general"]["default_sound_language"]
@@ -72,7 +73,7 @@ class AIThread(QThread):
         if response_idx > 0:
             prompt = prompt.replace(f"#response#", self.response_list[-1])
 
-        response = call_openai(self.model, prompt, **self.ai_config)
+        response = call_openai(self.model, prompt, self.system_prompt, **self.ai_config)
 
         response_str = ""
         for event in response: 
