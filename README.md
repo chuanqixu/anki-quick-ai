@@ -53,7 +53,7 @@ For usage, you should create your default prompt settings in the "prompt" tag of
 
 1. Prompt Name: A name for this prompt configuration.
 2. Default Browse Query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
-3. Note Field Configuration: Only note values with specified field will be selected. "Other Note Type" will be used for unspecified note types.
+3. Note Field Configuration: Only note values with the specified fields will be selected. "Other Note Type" will be used for unspecified note types.
 4. Prompt: A list of prompts that will be sent to OpenAI. In the prompt, you can use custom placeholders, which are sandwiched with `#`, e.x., `#language#`. Placeholders will be replaced before sending to OpenAI. It is designed for you to quickly change the prompt.
    1. `#field_value#`: **This is a keyword**. This will be replaced with a list of strings, which are values of the `note_field` in notes searched by `query`.
    2. `#response#`: **This is a keyword**. This will be replaced with the previous response from OpenAI.

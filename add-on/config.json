@@ -4,7 +4,7 @@
         "shortcut": "Alt+A",
         "play_sound": true,
         "default_sound_language": "English",
-        "default_edge_tts_voice": "en-US-AnaNeural"
+        "default_edge_tts_voice": "Random"
     },
 
     "ai_config": {

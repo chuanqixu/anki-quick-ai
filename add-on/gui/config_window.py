@@ -42,6 +42,7 @@ def general_tab(conf_window: ConfigWindow) -> None:
         default_voice_list,
         default_voice_list,
         "Default edge-tts Voice",
+        append_updates=False
     )
     voice_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
@@ -52,6 +53,10 @@ def general_tab(conf_window: ConfigWindow) -> None:
         if language == default_language:
             voice_combo.setCurrentText(default_voice)
 
+    def widget_update_voice_combo():
+        voice_combo.setCurrentText(conf_window.conf.get("general.default_edge_tts_voice"))
+
+    conf_window.widget_updates.append(widget_update_voice_combo)
     name_combo.currentTextChanged.connect(update_voice_combo)
 
     # This adds a stretchable blank space.
@@ -97,6 +102,7 @@ def ai_tab(conf_window: ConfigWindow) -> None:
         default_avail_chat_model_list,
         "Model:",
         tooltip="Default is gpt-3.5-turbo",
+        append_updates=False
     )
 
     def update_model(api_key):
@@ -109,6 +115,7 @@ def ai_tab(conf_window: ConfigWindow) -> None:
         if api_key == default_api_key:
             model_combo.setCurrentText(conf.get("ai_config.model"))
 
+    tab.widget_updates.insert(0, lambda: update_model(conf_window.conf.get("ai_config.api_key")))
     api_key_text_input.textChanged.connect(update_model)
 
     tab.space(20)

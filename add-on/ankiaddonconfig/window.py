@@ -222,6 +222,7 @@ class ConfigLayout(QBoxLayout):
         values: list,
         description: Optional[str] = None,
         tooltip: Optional[str] = None,
+        append_updates=True
     ) -> QComboBox:
         combobox = QComboBox()
         combobox.insertItems(0, labels)
@@ -239,7 +240,8 @@ class ConfigLayout(QBoxLayout):
                 )
             combobox.setCurrentIndex(index)
 
-        self.widget_updates.append(update)
+        if append_updates:
+            self.widget_updates.append(update)
 
         combobox.currentTextChanged.connect(
             lambda text: self.conf.set(key, text)
