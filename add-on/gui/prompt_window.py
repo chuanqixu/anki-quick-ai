@@ -1,17 +1,18 @@
 import copy
+from aqt import mw
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QTextOption
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QVBoxLayout, QPushButton, QTableWidgetItem, QInputDialog, QMessageBox, QLabel, QLineEdit, QTextEdit, QDialogButtonBox
+from PyQt6.QtCore import Qt, pyqtSignal, QSettings
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QVBoxLayout, QPushButton, QTableWidgetItem, QMessageBox, QLabel, QLineEdit, QTextEdit, QDialogButtonBox, QWidget, QComboBox, QScrollArea
 
 from ..utils import find_placeholder
-# from .config_window import conf
 from ..ankiaddonconfig import ConfigManager
+from ..anki import get_note_type_names_fields_dict
+
 conf = ConfigManager()
 
 
 
-class PromptNameTableDialog(QDialog):
+class PromptNameTableWidget(QWidget):
     def __init__(self, config_manager):
         super().__init__()
         self.config_manager = config_manager
@@ -135,17 +136,30 @@ class PromptNameTableDialog(QDialog):
 class PromptConfigDialog(QDialog):
     def __init__(self, prompt_name=None, prompt_config_data=None, in_run_dialog=False):
         super().__init__()
+        self.settings = QSettings('Anki', 'Anki Quick AI')
         self.prompt_config_data = copy.deepcopy(prompt_config_data)
         self.in_run_dialog = in_run_dialog
         self.is_changed = False
 
-        layout = QVBoxLayout()
-        self.setLayout(layout)
+        self.main_layout = QVBoxLayout(self)
+        self.setLayout(self.main_layout)
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.main_layout.addWidget(self.scroll_area)
+
+        self.content_widget = QWidget()
+        layout = QVBoxLayout(self.content_widget)
+
+        label = QLabel("Hover mouse on text to see more details!")
+        layout.addWidget(label)
+        layout.addSpacing(10)
 
         if not in_run_dialog:
             # Prompt
             input_layout = QHBoxLayout()
             label = QLabel("<b>Prompt Name:</b>")
+            label.setToolTip("Name for this configuration.")
             input_layout.addWidget(label)
             self.input_field_prompt_name = QLineEdit(prompt_name)
             input_layout.addWidget(self.input_field_prompt_name)
@@ -155,26 +169,30 @@ class PromptConfigDialog(QDialog):
             # Browse query
             input_layout = QHBoxLayout()
             label = QLabel("<b>Default Browse Query:</b>")
+            label.setToolTip("Default query used in every run. This can be quickly changed in the run dialog.")
             input_layout.addWidget(label)
             query = self.prompt_config_data["default_query"] if self.prompt_config_data else None
             self.input_field_browse_query = QLineEdit(query)
             input_layout.addWidget(self.input_field_browse_query)
             layout.addLayout(input_layout)
+
+            label = QLabel('See more details on how to specify query: <a href="https://docs.ankiweb.net/searching.html">Official Doc</a>')
+            label.setOpenExternalLinks(True)
+            layout.addWidget(label)
             layout.addSpacing(10)
 
-            # Note field
-            input_layout = QHBoxLayout()
-            label = QLabel("<b>Default Note Field:</b>")
-            input_layout.addWidget(label)
-            note_field = self.prompt_config_data["default_note_field"] if self.prompt_config_data else None
-            self.input_field_note_field = QLineEdit(note_field)
-            input_layout.addWidget(self.input_field_note_field)
-            layout.addLayout(input_layout)
-            layout.addSpacing(10)
+        # Note field
+        note_field_dict = self.prompt_config_data["note_field"] if self.prompt_config_data else None
+        self.note_field_table_widget = NoteFieldTableWidget(note_field_dict)
+        layout.addWidget(self.note_field_table_widget)
+        label = QLabel("\"Other Note Type\" is for all unspecified note types.")
+        layout.addWidget(label)
+        layout.addSpacing(10)
 
         # System Prompt
         input_layout = QVBoxLayout()
         label = QLabel("<b>System Prompt:</b>")
+        label.setToolTip("System prompts are special messages used to steer the behavior of ChatGPT. It is like one general guidance for the AI.")
         input_layout.addWidget(label)
         system_prompt_text_edit = self.prompt_config_data["system_prompt"] if self.prompt_config_data else None
         self.system_prompt_text_edit = QTextEdit(system_prompt_text_edit)
@@ -184,30 +202,36 @@ class PromptConfigDialog(QDialog):
 
         # Prompt
         prompt_list = self.prompt_config_data["prompt"] if self.prompt_config_data else None
-        self.prompt_table_dialog = TableDialog("Prompt:", prompt_list, button=True, create_dialog=PromptInputDialog, editable=False)
-        self.prompt_table_dialog.table.itemDoubleClicked.connect(self.double_click_item)
-        self.prompt_table_dialog.changed.connect(self.update_placeholder)
-        self.prompt_table_dialog.changed.connect(self.update_language)
-        layout.addWidget(self.prompt_table_dialog)
-        label = QLabel("Keyword placeholder:\n#field_value#: values in cards.\n#response#: previous response from OpenAI.\n#language#: language specified below.")
-        layout.addWidget(label)
+        self.prompt_table_widget = TableWidget("Prompt:", prompt_list, button=True, create_dialog=PromptInputDialog, editable=False)
+        self.prompt_table_widget.table.itemDoubleClicked.connect(self.double_click_item)
+        self.prompt_table_widget.changed.connect(self.update_placeholder)
+        self.prompt_table_widget.changed.connect(self.update_language)
+        layout.addWidget(self.prompt_table_widget)
+        # label = QLabel("""
+        # Placeholder should be used in prompts inside ##.
+        # Ex., #p# is replaced with values specified in placeholder below.
+
+        # Keyword placeholder:
+        # #field_value#: values in cards.
+        # #response#: previous response from OpenAI.
+        # #language#: language specified below.
+        # """)
+        # layout.addWidget(label)
         layout.addSpacing(10)
 
         # Placeholder
         placeholder_dict = self.prompt_config_data["placeholder"] if self.prompt_config_data else None
-        self.placeholder_table_dialog = PlaceholderTableDialog(placeholder_dict)
-        layout.addWidget(self.placeholder_table_dialog)
-        label = QLabel("Placeholder should be used in prompts inside ##.\nEx., #p# is replaced with placeholder named \"p\".")
-        layout.addWidget(label)
+        self.placeholder_table_widget = PlaceholderTableWidget(placeholder_dict)
+        layout.addWidget(self.placeholder_table_widget)
         layout.addSpacing(10)
 
         # Language list
         language_list = self.prompt_config_data["language"] if self.prompt_config_data else None
-        self.language_table_dialog = TableDialog("Language:", language_list, button=False)
-        layout.addWidget(self.language_table_dialog)
-        label = QLabel("Language can be used in prompts as placeholder with #language#.\nThis will be used as the language for sound generation for prompts.\nThe order is corresponding to prompts' order.")
-        layout.addWidget(label)
+        self.language_table_widget = TableWidget("Language:", language_list, button=False, tooltip="Language will be used for edge-tts sound generation. Language can also be used in prompts as placeholder with #language#.")
+        layout.addWidget(self.language_table_widget)
         layout.addSpacing(10)
+
+        self.scroll_area.setWidget(self.content_widget)
 
         button_layout = QHBoxLayout()
         # save button
@@ -222,7 +246,14 @@ class PromptConfigDialog(QDialog):
         cancel_button.setFixedSize(100, 40)  # set the size of the button
         button_layout.addWidget(cancel_button, 0, Qt.AlignCenter)  # align button to the center
 
-        layout.addLayout(button_layout)
+        self.main_layout.addLayout(button_layout)
+
+        # Restore the previous size of the dialog
+        size = self.settings.value('PromptConfigDialogSize')
+        if size:
+            self.resize(size)
+        else:
+            self.resize(800, 600)  # Set default size
 
     def save_prompt(self):
         if not self.prompt_config_data:
@@ -230,40 +261,40 @@ class PromptConfigDialog(QDialog):
         
         if not self.in_run_dialog:
             self.prompt_config_data["default_query"] = self.input_field_browse_query.text()
-            self.prompt_config_data["default_note_field"] = self.input_field_note_field.text()
+        self.prompt_config_data["note_field"] = self.note_field_table_widget.note_field_dict
         self.prompt_config_data["system_prompt"] = self.system_prompt_text_edit.toPlainText()
-        self.prompt_config_data["prompt"] = self.prompt_table_dialog.data
-        self.prompt_config_data["placeholder"] = self.placeholder_table_dialog.placeholder_dict
-        self.prompt_config_data["language"] = self.language_table_dialog.data
+        self.prompt_config_data["prompt"] = self.prompt_table_widget.data
+        self.prompt_config_data["placeholder"] = self.placeholder_table_widget.placeholder_dict
+        self.prompt_config_data["language"] = self.language_table_widget.data
         self.is_changed = True
         self.close()
 
     def update_placeholder(self):
         updated_placeholder_dict = {}
-        for i, prompt in enumerate(self.prompt_table_dialog.data):
+        for i, prompt in enumerate(self.prompt_table_widget.data):
             placeholder_list = find_placeholder(prompt)
             if placeholder_list:
                 i = str(i + 1)
                 updated_placeholder_dict[i] = {}
                 for name in placeholder_list:
-                    if self.placeholder_table_dialog.placeholder_dict and i in self.placeholder_table_dialog.placeholder_dict:
-                        if name in self.placeholder_table_dialog.placeholder_dict[i]:
-                            updated_placeholder_dict[i][name] = self.placeholder_table_dialog.placeholder_dict[i][name]
+                    if self.placeholder_table_widget.placeholder_dict and i in self.placeholder_table_widget.placeholder_dict:
+                        if name in self.placeholder_table_widget.placeholder_dict[i]:
+                            updated_placeholder_dict[i][name] = self.placeholder_table_widget.placeholder_dict[i][name]
                         else:
                             updated_placeholder_dict[i][name] = ""
                     else:
                         updated_placeholder_dict[i][name] = ""
-        self.placeholder_table_dialog.update_item(updated_placeholder_dict)
+        self.placeholder_table_widget.update_item(updated_placeholder_dict)
 
     def update_language(self):
-        if not self.language_table_dialog.data:
-            self.language_table_dialog.data = []
-        len_diff = len(self.prompt_table_dialog.data) - len(self.language_table_dialog.data)
+        if not self.language_table_widget.data:
+            self.language_table_widget.data = []
+        len_diff = len(self.prompt_table_widget.data) - len(self.language_table_widget.data)
 
         if len_diff > 0:
-            self.language_table_dialog.update_item(self.language_table_dialog.data + [conf["general"]["default_sound_language"]] * len_diff)
+            self.language_table_widget.update_item(self.language_table_widget.data + [conf["general"]["default_sound_language"]] * len_diff)
         else:
-            self.language_table_dialog.update_item(self.language_table_dialog.data[:len(self.prompt_table_dialog.data)])
+            self.language_table_widget.update_item(self.language_table_widget.data[:len(self.prompt_table_widget.data)])
     
     def double_click_item(self, item):
         dialog = PromptInputDialog(item.text(), self)
@@ -272,11 +303,16 @@ class PromptConfigDialog(QDialog):
         if result == QDialog.Accepted:
             item.setText(dialog.get_input_text())
 
+    def closeEvent(self, event):
+        # Save the current size of the dialog when it's closed
+        self.settings.setValue('PromptConfigDialogSize', self.size())
+        super().closeEvent(event)
 
 
-class TableDialog(QDialog):
+
+class TableWidget(QWidget):
     changed = pyqtSignal()
-    def __init__(self, name, data = None, button=False, create_dialog=None, editable=True):
+    def __init__(self, name, data = None, button=False, create_dialog=None, editable=True, tooltip=None):
         super().__init__()
         self.create_dialog = create_dialog
         self.editable = editable
@@ -288,6 +324,8 @@ class TableDialog(QDialog):
         self.title_layout = QHBoxLayout()
 
         label = QLabel(f"<b>{name}</b>")
+        if tooltip:
+            label.setToolTip(tooltip)
         self.title_layout.addWidget(label)
 
         if button:
@@ -303,7 +341,7 @@ class TableDialog(QDialog):
 
         self.main_layout.addLayout(self.title_layout)
 
-        self.table = QTableWidget(0, 1)  # 0 rows, 1 column
+        self.table = QTableWidget(0, 1)
         self.table.setColumnWidth(0, 350)
         self.table.setHorizontalHeaderLabels(["Value"])
         self.load_data()
@@ -392,7 +430,7 @@ class PromptInputDialog(QDialog):
 
 
 
-class PlaceholderTableDialog(QDialog):
+class PlaceholderTableWidget(QWidget):
     def __init__(self, placeholder_dict = None):
         super().__init__()
         self.main_layout = QVBoxLayout(self)
@@ -402,7 +440,7 @@ class PlaceholderTableDialog(QDialog):
         label = QLabel("<b>Placeholder:</b>")
         self.main_layout.addWidget(label)
 
-        self.table = QTableWidget(0, 3)  # 0 rows, 1 column
+        self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Index", "Name", "Value"])
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(1, 100)
@@ -458,3 +496,184 @@ class PlaceholderTableDialog(QDialog):
             else:
                 placeholder_dict[i][name] = value
         self.placeholder_dict = placeholder_dict
+
+
+
+class NoteFieldTableWidget(QWidget):
+    def __init__(self, note_field_dict = None):
+        super().__init__()
+        self.note_type_names_fields_dict = get_note_type_names_fields_dict(mw.col)
+        self.note_type_names_fields_dict["Other Note Type"] = []
+
+        self.main_layout = QVBoxLayout(self)
+
+        self.note_field_dict = copy.deepcopy(note_field_dict)
+
+        self.title_layout = QHBoxLayout()
+        label = QLabel("<b>Note Field:</b>")
+        label.setToolTip("Only text in the specified fields will be selected.")
+        self.title_layout.addWidget(label)
+
+        self.add_button = QPushButton('Add')
+        self.add_button.clicked.connect(self.create_item)
+        self.add_button.setFixedSize(90, 30)
+        self.title_layout.addWidget(self.add_button)
+
+        self.delete_button = QPushButton('Delete')
+        self.delete_button.clicked.connect(self.delete_item)
+        self.delete_button.setFixedSize(90, 30)
+        self.title_layout.addWidget(self.delete_button)
+
+        self.main_layout.addLayout(self.title_layout)
+
+        self.table = QTableWidget(0, 2)
+        self.table.setHorizontalHeaderLabels(["Note Type", "Selected Field"])
+        self.table.setColumnWidth(0, 150)
+        self.table.setColumnWidth(1, 150)
+        self.load_data()
+        self.main_layout.addWidget(self.table)
+
+        self.table.cellChanged.connect(self.table_updated)
+
+    def load_data(self):
+        if self.note_field_dict:
+            keys = list(self.note_field_dict.keys())
+            keys.sort()
+            for note_type in keys:
+                for field_name in self.note_field_dict[note_type]:
+                    self.add_item(note_type, field_name)
+
+    def add_item(self, note_type, field_name):
+        row = self.table.rowCount()
+        self.table.insertRow(row)
+
+        note_type_combo = QComboBox(self)
+        note_type_combo.addItems(self.note_type_names_fields_dict.keys())
+        note_type_combo.setCurrentText(note_type)
+
+        self.table.setCellWidget(row, 0, note_type_combo)
+
+        if note_type == "Other Note Type":
+            self.table.setItem(row, 1, QTableWidgetItem(field_name))
+        else:
+            field_name_combo = QComboBox(self)
+            field_name_combo.addItems(self.note_type_names_fields_dict[note_type])
+            field_name_combo.setCurrentText(field_name)
+            field_name_combo.currentTextChanged.connect(self.table_updated)
+            self.table.setCellWidget(row, 1, field_name_combo)
+
+        def update_note_field(note_type):
+            if note_type == "Other Note Type":
+                field_name = "Front"
+                if note_type in self.note_field_dict and len(self.note_field_dict[note_type]) > 0:
+                    field_name = self.note_field_dict[note_type][0]
+                self.table.setCellWidget(row, 1, None)
+                self.table.setItem(row, 1, QTableWidgetItem(field_name))
+            else:
+                field_name_combo = QComboBox(self)
+                field_name_combo.addItems(self.note_type_names_fields_dict[note_type])
+                self.table.setCellWidget(row, 1, field_name_combo)
+                field_name_combo.currentTextChanged.connect(self.table_updated)
+
+        note_type_combo.currentTextChanged.connect(update_note_field)
+
+    def create_item(self):
+        dialog = NoteFieldDialog(self.note_type_names_fields_dict)
+        result = dialog.exec_()
+
+        if result == QDialog.Accepted:
+            note_type, field_value = dialog.get_input_text()
+            self.add_item(note_type, field_value)
+            self.save_data()
+
+    def delete_item(self):
+        row = self.table.currentRow()
+
+        if row > -1:
+            box = QMessageBox.question(self, 'Delete', 'Are you sure you want to delete this item?')
+
+            if box == QMessageBox.Yes:
+                self.table.removeRow(row)
+                self.save_data()
+
+    def update_item(self, note_field_dict):
+        self.note_field_dict = note_field_dict
+        self.table.setRowCount(0)
+        self.load_data()
+
+    def table_updated(self, item):
+        self.save_data()
+
+    def save_data(self):
+        note_field_dict = {}
+        for row in range(self.table.rowCount()):
+            note_type = self.table.cellWidget(row, 0).currentText()
+
+            widget = self.table.cellWidget(row, 1)
+            if isinstance(widget, QComboBox):
+                field_name = widget.currentText()
+            else:
+                item = self.table.item(row, 1)
+                field_name = item.text() if item else ""
+            if note_type not in note_field_dict:
+                note_field_dict[note_type] = [field_name]
+            else:
+                if field_name not in note_type:
+                    note_field_dict[note_type].append(field_name)
+        self.note_field_dict = note_field_dict
+
+
+
+class NoteFieldDialog(QDialog):
+    def __init__(self, note_type_names_fields_dict, parent = None):
+        super().__init__(parent=parent)
+        self.note_type_names_fields_dict = note_type_names_fields_dict
+
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+
+        label = QLabel("<b>Note Type:</b>")
+        self.main_layout.addWidget(label)
+
+        self.note_type_combo = QComboBox(self)
+        self.main_layout.addWidget(self.note_type_combo)
+        self.note_type_combo.addItems(self.note_type_names_fields_dict.keys())
+
+        self.main_layout.addSpacing(10)
+
+
+        label = QLabel("<b>Field Name:</b>")
+        self.main_layout.addWidget(label)
+
+        if self.note_type_combo.currentText() == "Other Note Type":
+            self.field_name_widget = QLineEdit("Front")
+        else:
+            self.field_name_widget = QComboBox(self)
+            self.field_name_widget.addItems(self.note_type_names_fields_dict[self.note_type_combo.currentText()])
+        self.main_layout.addWidget(self.field_name_widget)
+
+        def update_note_field(note_type):
+            if note_type == "Other Note Type":
+                field_name_widget = QLineEdit("Front")
+            else:
+                field_name_widget = QComboBox(self)
+                field_name_widget.addItems(self.note_type_names_fields_dict[note_type])
+
+            index = self.main_layout.indexOf(self.field_name_widget)
+            self.main_layout.removeWidget(self.field_name_widget)
+            self.field_name_widget.setParent(None)
+            self.main_layout.insertWidget(index, field_name_widget)
+            self.field_name_widget = field_name_widget
+
+        self.note_type_combo.currentTextChanged.connect(update_note_field)
+
+        self.main_layout.addSpacing(10)
+
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        self.main_layout.addWidget(buttonBox, alignment=Qt.AlignCenter)
+
+    def get_input_text(self):
+        field_name = self.field_name_widget.text() if isinstance(self.field_name_widget, QLineEdit) else self.field_name_widget.currentText()
+        return self.note_type_combo.currentText(), field_name

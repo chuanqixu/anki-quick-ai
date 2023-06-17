@@ -10,10 +10,12 @@
 Added
 
 * System prompt.
+* Note field configurations for note types.
 
 Changed
 
 * Now model is drop down menu.
+* Remove note field and replace it with note field configuration.
 
 ### Version **1.0.4** 2023-06-12
 

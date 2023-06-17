@@ -47,9 +47,9 @@ There are several ways to run the add-on:
 
 Double click "Tools->Add-ons->Anki Quick AI", and a config page will show. Some of the parameters may be effective after restarting Anki. You should add "api_key" and "model" in the "AI" tag of the config page.
 
+Hover your mouse for tooltips of parameters in the configuration window.
+
 For usage, you should create your default prompt settings in the "prompt" tag of the config page. The settings are the following:
-
-
 
 1. Prompt Name: A name for this prompt configuration.
 2. Default Browse Query: Query used to search for notes. The query grammar is the same as Anki browse, which can be found in the [official manual](https://docs.ankiweb.net/searching.html).
@@ -78,77 +78,7 @@ pip install -r requirements.txt --target lib
 
 Please find in [CHANGELOG.md](./CHANGELOG.md).
 
-### Version **1.0.4** 2023-06-12
-
-Added
-
-* Interaction with OpenAI in the response dialog.
-
-Changed
-
-* Move audio widget below each response widget.
-
-
-### Version **1.0.3** 2023-06-07
-
-Added
-
-* Add configuration GUI. Now configuration is more clear and straightforward!
-* Support multiple predefined prompt.
-* Run again button to generate new response.
-* Sliders for audio.
-* Specify edge-tts voice
-
-Changed
-
-* Now can quickly change prompt and placeholder before running.
-
-Fixed
-
-* Sometimes it does not have permission to override the sound file.
-
-### Version **1.0.2** 2023-05-30
-
-Added
-
-* Now support streamed and real-time response.
-* Add buttons to save texts and audio files at the end of the dialog.
-
-Changed
-
-* Replace `#field_value#` as the placeholder for field values. Previously, `#response#` is used for this in the first prompt and nothing will be used in the following prompts.
-* Disabled HTML representation in the dialog.
-
-Fixed
-
-* No directory of sound files if 'play_sound' is set to false.
-
-### Version **1.0.1** -- 2023-05-27
-
-Added
-
-* Support quickly change query and note_field in the pop-up window. This will not change the default configuration.
-* Add a "Quick AI" button to the browse window to quickly click when checking the browse query, the query will be the current input query in the browse window.
-* Add a shortcut to run it quickly in the main window.
-* Support adding customized placeholders in prompts.
-* Support HTML tags in response.
-
-Changed
-
-* Remove the progress bar of interacting with OpenAI so Anki is not blocked.
-* Change configuration files.
-* Change the response window. Now the texts can be copied.
-
-Fixed
-
-* Sometimes it does not have permission to override the sound file.
-
-### Version **1.0.0** -- 2023-05-22
-
-First Version
-
-
-## Local Usage
+## Local Usage (Deprecated)
 
 It also provides a local Python program for this in [src](./src/), but this is not maintained anymore. The latest version is to use the Anki add-on.
 
@@ -162,4 +92,3 @@ This repository is under [AGPL 3.0](./LICENSE) required by AnkiWeb for Anki Add-
 Thanks for the inspiration and code in [yihong0618/duolingo_remember](https://github.com/yihong0618/duolingo_remember) and [yihong0618/shanbay_remember](https://github.com/yihong0618/shanbay_remember).
 
 Thanks for [BlueGreenMagick/ankiaddonconfig](https://github.com/BlueGreenMagick/ankiaddonconfig) for configuration window.
-

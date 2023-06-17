@@ -2,7 +2,7 @@ import openai
 from PyQt6.QtWidgets import QComboBox
 
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
-from .prompt_window import PromptNameTableDialog
+from .prompt_window import PromptNameTableWidget
 from ..edge_tts_data import language_list, get_voice_list
 from ..ai import get_avail_chat_model_list
 
@@ -64,10 +64,10 @@ def general_tab(conf_window: ConfigWindow) -> None:
 def prompt_tab(conf_window: ConfigWindow) -> None:
     tab = conf_window.add_tab("Prompt")
 
-    prompt_name_table_dialog = PromptNameTableDialog(conf)
-    tab.layout().addWidget(prompt_name_table_dialog)
-    conf_window.execute_on_save(lambda: conf.set("prompt", prompt_name_table_dialog.prompt_data))
-    conf_window.widget_updates.append(prompt_name_table_dialog.load_data)
+    prompt_name_table_widget = PromptNameTableWidget(conf)
+    tab.layout().addWidget(prompt_name_table_widget)
+    conf_window.execute_on_save(lambda: conf.set("prompt", prompt_name_table_widget.prompt_data))
+    conf_window.widget_updates.append(prompt_name_table_widget.load_data)
 
     # This adds a stretchable blank space.
     # If you are not sure what this does,
@@ -86,6 +86,7 @@ def ai_tab(conf_window: ConfigWindow) -> None:
         "OpenAI API Key:",
         tooltip="Please go to OpenAI website to see how to acquire the key",
     )
+    tab.text('You can get API key <a href="https://platform.openai.com/account/api-keys">here</a>', html=True, size=10)
 
     default_avail_chat_model_list = get_avail_chat_model_list(default_api_key)
     if len(default_avail_chat_model_list) == 0:
@@ -111,7 +112,9 @@ def ai_tab(conf_window: ConfigWindow) -> None:
     api_key_text_input.textChanged.connect(update_model)
 
     tab.space(20)
+
     tab.text("Advanced", bold=True)
+    tab.text('<a href="https://platform.openai.com/docs/api-reference/chat/create#chat/create-temperature">More Details</a>', html=True, size=10)
 
     tab.number_input(
         "ai_config.temperature",

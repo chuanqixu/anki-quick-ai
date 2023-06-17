@@ -36,7 +36,7 @@ class AIThread(QThread):
             self.ai_config = config["ai_config"]
 
         self.query = prompt_config["query"]
-        self.note_field = prompt_config["note_field"]
+        self.note_field_config = prompt_config["note_field"]
         self.system_prompt = prompt_config["system_prompt"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
@@ -53,7 +53,7 @@ class AIThread(QThread):
             self.finished_one_iter.connect(self.gen_sound)
 
     def run(self):
-        self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field)
+        self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field_config)
         self.field_value_ready.emit(self.field_value_list)
 
         time.sleep(0.1) # make sure the first prompt will be printed
@@ -162,7 +162,6 @@ def run_add_on(parent=None):
     def click_run_add_on(run_widget):
         prompt_config = run_widget.prompt_dict[run_widget.curr_prompt_name]
         prompt_config["query"] = run_widget.input_field_browse_query.text()
-        prompt_config["note_field"] = run_widget.input_field_note_field.text()
         run_widget.close()
         gen_response(
             prompt_config,

@@ -4,9 +4,8 @@ from aqt.browser import Browser
 from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QDialog, QComboBox
 
-from .prompt_window import PromptConfigDialog, TableDialog, PlaceholderTableDialog, conf
-from ..utils import find_placeholder
 from .prompt_window import PromptConfigDialog
+
 
 
 class RunDialog(QDialog):
@@ -48,14 +47,6 @@ class RunDialog(QDialog):
         input_layout.addWidget(query_label)
         self.input_field_browse_query = QLineEdit(query)
         input_layout.addWidget(self.input_field_browse_query)
-        layout.addLayout(input_layout)
-
-        # Note field
-        input_layout = QHBoxLayout()
-        note_field_label = QLabel("Note Field:")
-        input_layout.addWidget(note_field_label)
-        self.input_field_note_field = QLineEdit(self.prompt_dict[self.curr_prompt_name]["default_note_field"])
-        input_layout.addWidget(self.input_field_note_field)
         layout.addLayout(input_layout)
 
         # Configure Prompt 

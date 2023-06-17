@@ -181,7 +181,6 @@ class ResponseDialog(QDialog):
     def add_audio_player_widget(self, filename):
         audio_player_widget = AudioPlayerWidget(filename)
         i = int(filename.split("_")[-1].split(".")[0])
-        # self.main_layout.addWidget(audio_player_widget)
         self.response_widget_list[i].add_audio_player_widget(audio_player_widget)
         self.audio_player_widget_dict[i] = audio_player_widget
         if self.ai_thread.play_sound and i == 0:

@@ -19,7 +19,9 @@
     "prompt": {
         "Words Story": {
             "default_query": "\"deck:current\" introduced:1",
-            "default_note_field": "Front",
+            "note_field": {
+                "Other Note Type": ["Front"]
+            },
             "system_prompt": "You are a helpful assistant.",
             "prompt": [
                 "I am going to remember these words: #field_value#. I want you do the following two things to help me remember these words. The first step is to list these words and their translation in #trans_lang#, one word per line. The second step is to write a creative and interesting story in #language# which is less than #num_words# words. Please make sure you include these words in the story. Feel free to conjugate these words to make the story creative and interesting. Do not translate the story.",
