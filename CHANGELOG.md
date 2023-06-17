@@ -16,6 +16,7 @@ Changed
 
 * Now model is drop down menu.
 * Remove note field and replace it with note field configuration.
+* Now prompt configuration dialog is scrollable.
 
 ### Version **1.0.4** 2023-06-12
 
