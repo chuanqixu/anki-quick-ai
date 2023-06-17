@@ -550,7 +550,6 @@ class NoteFieldTableWidget(QWidget):
         note_type_combo = QComboBox(self)
         note_type_combo.addItems(self.note_type_names_fields_dict.keys())
         note_type_combo.setCurrentText(note_type)
-        note_type_combo.currentTextChanged.connect(self.table_updated)
 
         self.table.setCellWidget(row, 0, note_type_combo)
 
@@ -575,6 +574,7 @@ class NoteFieldTableWidget(QWidget):
                 field_name_combo.addItems(self.note_type_names_fields_dict[note_type])
                 self.table.setCellWidget(row, 1, field_name_combo)
                 field_name_combo.currentTextChanged.connect(self.table_updated)
+            self.table_updated()
 
         note_type_combo.currentTextChanged.connect(update_note_field)
 
@@ -602,7 +602,7 @@ class NoteFieldTableWidget(QWidget):
         self.table.setRowCount(0)
         self.load_data()
 
-    def table_updated(self, item):
+    def table_updated(self):
         self.save_data()
 
     def save_data(self):
