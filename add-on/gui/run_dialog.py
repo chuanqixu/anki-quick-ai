@@ -54,6 +54,10 @@ class RunDialog(QDialog):
         self.prompt_config_button.clicked.connect(self.config_prompt)
         layout.addWidget(self.prompt_config_button)
 
+        # Label
+        instruction_label = QLabel("Configuration only applies this time.\nPlease configure in the configuration page for future usage.")
+        layout.addWidget(instruction_label)
+
         # Run button
         self.run_button = QPushButton("Run")
         # one connect in controller.py
