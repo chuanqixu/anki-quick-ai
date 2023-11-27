@@ -64,13 +64,13 @@ class PromptNameTableWidget(QWidget):
         self.table.insertRow(row)
         self.table.setItem(row, 0, QTableWidgetItem(name))
         item = self.table.item(row, 0)
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
         self.row_text_dict[row] = name
 
     def create_item(self):
         prompt_config_dialog = PromptConfigDialog()
-        prompt_config_dialog.exec_()
+        prompt_config_dialog.exec()
 
         if prompt_config_dialog.is_changed:
             prompt_name = prompt_config_dialog.input_field_prompt_name.text()
@@ -84,7 +84,7 @@ class PromptNameTableWidget(QWidget):
         if item:
             old_name = item.text()
             prompt_config_dialog = PromptConfigDialog(old_name, self.prompt_data[old_name])
-            prompt_config_dialog.exec_()
+            prompt_config_dialog.exec()
 
             if prompt_config_dialog.is_changed:
                 prompt_name = prompt_config_dialog.input_field_prompt_name.text()
@@ -238,13 +238,13 @@ class PromptConfigDialog(QDialog):
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_prompt)
         save_button.setFixedSize(100, 40)  # set the size of the button
-        button_layout.addWidget(save_button, 0, Qt.AlignCenter)  # align button to the center
+        button_layout.addWidget(save_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
         # Cancel button
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.close)
         cancel_button.setFixedSize(100, 40)  # set the size of the button
-        button_layout.addWidget(cancel_button, 0, Qt.AlignCenter)  # align button to the center
+        button_layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
         self.main_layout.addLayout(button_layout)
 
@@ -298,9 +298,9 @@ class PromptConfigDialog(QDialog):
     
     def double_click_item(self, item):
         dialog = PromptInputDialog(item.text(), self)
-        result = dialog.exec_()
+        result = dialog.exec()
 
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             item.setText(dialog.get_input_text())
 
     def closeEvent(self, event):
@@ -359,7 +359,7 @@ class TableWidget(QWidget):
         self.table.setItem(row, 0, QTableWidgetItem(name))
         item = self.table.item(row, 0)
         if not self.editable:
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
     
     def update_item(self, data):
         self.data = data
@@ -376,9 +376,9 @@ class TableWidget(QWidget):
 
     def create_item(self):
         dialog = self.create_dialog(text=None, parent=self)
-        result = dialog.exec_()
+        result = dialog.exec()
 
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             name = dialog.get_input_text()
             self.add_item(name)
             self.save_data()
@@ -389,7 +389,7 @@ class TableWidget(QWidget):
         if row > -1:
             box = QMessageBox.question(self, 'Delete', 'Are you sure you want to delete this item?')
 
-            if box == QMessageBox.Yes:
+            if box == QMessageBox.DialogCode.Yes:
                 self.table.removeRow(row)
                 self.save_data()
 
@@ -420,7 +420,7 @@ class PromptInputDialog(QDialog):
         self.textEdit = QTextEdit(text, self)
         layout.addWidget(self.textEdit)
 
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
@@ -466,9 +466,9 @@ class PlaceholderTableWidget(QWidget):
         self.table.setItem(row, 2, QTableWidgetItem(value))
 
         item = self.table.item(row, 0)
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         item = self.table.item(row, 1)
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
     def update_item(self, placeholder_dict):
         self.placeholder_dict = placeholder_dict
@@ -580,9 +580,9 @@ class NoteFieldTableWidget(QWidget):
 
     def create_item(self):
         dialog = NoteFieldDialog(self.note_type_names_fields_dict)
-        result = dialog.exec_()
+        result = dialog.exec()
 
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             note_type, field_value = dialog.get_input_text()
             self.add_item(note_type, field_value)
             self.save_data()
@@ -670,10 +670,10 @@ class NoteFieldDialog(QDialog):
 
         self.main_layout.addSpacing(10)
 
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
-        self.main_layout.addWidget(buttonBox, alignment=Qt.AlignCenter)
+        self.main_layout.addWidget(buttonBox, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def get_input_text(self):
         field_name = self.field_name_widget.text() if isinstance(self.field_name_widget, QLineEdit) else self.field_name_widget.currentText()

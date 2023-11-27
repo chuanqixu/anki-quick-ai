@@ -62,20 +62,20 @@ class RunDialog(QDialog):
         self.run_button = QPushButton("Run")
         # one connect in controller.py
         self.run_button.setFixedSize(100, 40)  # set the size of the button
-        layout.addWidget(self.run_button, 0, Qt.AlignCenter)  # align button to the center
+        layout.addWidget(self.run_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
         # Cancel button
         cancel_button = QPushButton("Cancel")
         cancel_button.clicked.connect(self.close)
         cancel_button.setFixedSize(100, 40)  # set the size of the button
-        layout.addWidget(cancel_button, 0, Qt.AlignCenter)  # align button to the center
+        layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
     def prompt_changed(self, index):
         self.curr_prompt_name = self.prompt_box.itemText(index)
 
     def config_prompt(self):
         prompt_config_dialog = PromptConfigDialog(prompt_name=None, prompt_config_data=self.prompt_dict[self.curr_prompt_name], in_run_dialog=True)
-        prompt_config_dialog.exec_()
+        prompt_config_dialog.exec()
         if prompt_config_dialog.is_changed:
             self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.prompt_config_data
 

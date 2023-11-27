@@ -54,7 +54,7 @@ class ResponseDialog(QDialog):
         button_layout.addWidget(self.save_audio_button)
 
         self.prompt_text_edit = PromptTextEdit("Input new prompt here", self, self.saved_font_size)
-        self.prompt_text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.prompt_text_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self.main_layout = QVBoxLayout(self)
         # self.main_layout.addLayout(self.response_layout)
@@ -69,7 +69,7 @@ class ResponseDialog(QDialog):
         else:
             self.resize(800, 600)  # Set default size
 
-        self.setWindowModality(Qt.NonModal)
+        self.setWindowModality(Qt.WindowModality.NonModal)
 
         # Connect signal
         self.ai_thread.start_one_iter.connect(self.new_response_widget)
@@ -218,15 +218,15 @@ class ResponseWidget(QWidget):
 
         self.main_layout.addWidget(self.text_edit)
         self.curr_cursor = self.text_edit.textCursor()
-        self.curr_cursor.movePosition(QTextCursor.End)
+        self.curr_cursor.movePosition(QTextCursor.MoveOperation.End)
 
         if add_spacer:
-            spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
             self.main_layout.addItem(spacer)
 
     def append_text(self, new_text):
         self.curr_cursor.insertText(new_text)
-        self.curr_cursor.movePosition(QTextCursor.End)
+        self.curr_cursor.movePosition(QTextCursor.MoveOperation.End)
 
     def adjust_height(self):
         doc_height = self.text_edit.document().size().height()
@@ -307,12 +307,12 @@ class PromptTextEdit(QTextEdit):
 
         self.setFixedHeight(self.fm.lineSpacing() + 10)
 
-        self.setLineWrapMode(QTextEdit.WidgetWidth)
+        self.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         self.textChanged.connect(self.adjust_height)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            if not (event.modifiers() & Qt.ShiftModifier):
+        if event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
+            if not (event.modifiers() & Qt.Key.ShiftModifier):
                 event.accept()
                 self.new_prompt_signal.emit(self.toPlainText())
                 self.clear()
