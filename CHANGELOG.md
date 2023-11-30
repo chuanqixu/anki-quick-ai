@@ -5,6 +5,13 @@
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 
+### Version **1.0.6** 2023-11-29
+
+Fixed
+
+* Thanks for @marquiswang. It is now ported to Anki 23.10.
+
+
 ### Version **1.0.5** 2023-06-16
 
 Added

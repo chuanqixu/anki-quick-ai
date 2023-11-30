@@ -92,3 +92,5 @@ This repository is under [AGPL 3.0](./LICENSE) required by AnkiWeb for Anki Add-
 Thanks for the inspiration and code in [yihong0618/duolingo_remember](https://github.com/yihong0618/duolingo_remember) and [yihong0618/shanbay_remember](https://github.com/yihong0618/shanbay_remember).
 
 Thanks for [BlueGreenMagick/ankiaddonconfig](https://github.com/BlueGreenMagick/ankiaddonconfig) for configuration window.
+
+Thanks for @marquiswang. It is now ported to Anki 23.10.
