@@ -4,10 +4,19 @@
 
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
+### Version **1.0.8** 2024-01-15
+
+Changed
+
+* Update to the latest version of OpenAI library
+
+Fixed
+
+* Fixed the bugs when deleting prompts due to the issues when Anki updates to PyQt 6.6
 
 ### Version **1.0.7** 2024-01-14
 
-Fixed
+Changed
 
 * Thanks for @quinn-p-mchugh. Models are now not hardcoded.
 

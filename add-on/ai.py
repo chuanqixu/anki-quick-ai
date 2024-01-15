@@ -7,12 +7,12 @@ import random, os, asyncio
 
 
 
-def call_openai(model, prompt, system_prompt, **kwargs):
+def call_openai(client, model, prompt, system_prompt, **kwargs):
     messages = [{"role": "user", "content": prompt}]
     if system_prompt:
         messages.insert(0, {"role": "system", "content": system_prompt})
 
-    completion = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
         model = model,
         messages=messages,
         stream=True,
@@ -36,7 +36,8 @@ def make_edge_tts_mp3(text, language, voice, filename):
 def get_avail_chat_model_list(api_key):
     avail_chat_model_list = []
     try:
-        openai.api_key = api_key
-        avail_chat_model_list = [model["id"] for model in openai.Model.list()["data"] if model["id"].startswith("gpt")]
+        client = openai.OpenAI(api_key=api_key)
+        models = client.models.list().data
+        avail_chat_model_list = [model.id for model in models if model.id.startswith("gpt")]
     finally:
         return avail_chat_model_list
