@@ -5,6 +5,7 @@ Communicate package.
 
 import json
 import re
+import ssl
 import time
 import uuid
 from contextlib import nullcontext
@@ -23,6 +24,7 @@ from typing import (
 from xml.sax.saxutils import escape
 
 import aiohttp
+import certifi
 
 from edge_tts.exceptions import (
     NoAudioReceived,
@@ -150,7 +152,7 @@ def split_text_by_byte_length(
         yield new_text
 
 
-def mkssml(text: Union[str, bytes], voice: str, rate: str, volume: str) -> str:
+def mkssml(text: Union[str, bytes], voice: str, rate: str, volume: str, pitch: str) -> str:
     """
     Creates a SSML string from the given parameters.
 
@@ -162,7 +164,7 @@ def mkssml(text: Union[str, bytes], voice: str, rate: str, volume: str) -> str:
 
     ssml = (
         "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"
-        f"<voice name='{voice}'><prosody pitch='+0Hz' rate='{rate}' volume='{volume}'>"
+        f"<voice name='{voice}'><prosody pitch='{pitch}' rate='{rate}' volume='{volume}'>"
         f"{text}</prosody></voice></speak>"
     )
     return ssml
@@ -201,7 +203,7 @@ def ssml_headers_plus_data(request_id: str, timestamp: str, ssml: str) -> str:
     )
 
 
-def calc_max_mesg_size(voice: str, rate: str, volume: str) -> int:
+def calc_max_mesg_size(voice: str, rate: str, volume: str, pitch: str) -> int:
     """Calculates the maximum message size for the given voice, rate, and volume.
 
     Returns:
@@ -213,7 +215,7 @@ def calc_max_mesg_size(voice: str, rate: str, volume: str) -> int:
             ssml_headers_plus_data(
                 connect_id(),
                 date_to_string(),
-                mkssml("", voice, rate, volume),
+                mkssml("", voice, rate, volume, pitch),
             )
         )
         + 50  # margin of error
@@ -233,6 +235,7 @@ class Communicate:
         *,
         rate: str = "+0%",
         volume: str = "+0%",
+        pitch: str = "+0Hz",
         proxy: Optional[str] = None,
     ):
         """
@@ -248,11 +251,12 @@ class Communicate:
         # Possible values for voice are:
         # - Microsoft Server Speech Text to Speech Voice (cy-GB, NiaNeural)
         # - cy-GB-NiaNeural
+        # - fil-PH-AngeloNeural
         # Always send the first variant as that is what Microsoft Edge does.
         if not isinstance(voice, str):
             raise TypeError("voice must be str")
         self.voice: str = voice
-        match = re.match(r"^([a-z]{2})-([A-Z]{2})-(.+Neural)$", voice)
+        match = re.match(r"^([a-z]{2,})-([A-Z]{2,})-(.+Neural)$", voice)
         if match is not None:
             lang = match.group(1)
             region = match.group(2)
@@ -286,6 +290,12 @@ class Communicate:
             raise ValueError(f"Invalid volume '{volume}'.")
         self.volume: str = volume
 
+        if not isinstance(pitch, str):
+            raise TypeError("pitch must be str")
+        if re.match(r"^[+-]\d+Hz$", pitch) is None:
+            raise ValueError(f"Invalid pitch '{pitch}'.")
+        self.pitch: str = pitch
+
         if proxy is not None and not isinstance(proxy, str):
             raise TypeError("proxy must be str")
         self.proxy: Optional[str] = proxy
@@ -295,15 +305,16 @@ class Communicate:
 
         texts = split_text_by_byte_length(
             escape(remove_incompatible_characters(self.text)),
-            calc_max_mesg_size(self.voice, self.rate, self.volume),
+            calc_max_mesg_size(self.voice, self.rate, self.volume, self.pitch),
         )
         final_utterance: Dict[int, int] = {}
         prev_idx = -1
         shift_time = -1
 
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
         for idx, text in enumerate(texts):
             async with aiohttp.ClientSession(
-                trust_env=True
+                trust_env=True,
             ) as session, session.ws_connect(
                 f"{WSS_URL}&ConnectionId={connect_id()}",
                 compress=15,
@@ -319,6 +330,7 @@ class Communicate:
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
                     " (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41",
                 },
+                ssl=ssl_ctx,
             ) as websocket:
                 # download indicates whether we should be expecting audio data,
                 # this is so what we avoid getting binary data from the websocket
@@ -357,7 +369,7 @@ class Communicate:
                     ssml_headers_plus_data(
                         connect_id(),
                         date,
-                        mkssml(text, self.voice, self.rate, self.volume),
+                        mkssml(text, self.voice, self.rate, self.volume, self.pitch),
                     )
                 )
 

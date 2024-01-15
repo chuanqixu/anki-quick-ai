@@ -62,7 +62,7 @@ class AIThread(QThread):
         self.api_key = self.ai_config.pop("api_key")
         self.model = self.ai_config.pop("model")
 
-        openai.api_key = self.api_key
+        self.client = openai.OpenAI(api_key=self.api_key)
         self.initial_response()
 
     def response(self, prompt):
@@ -73,14 +73,14 @@ class AIThread(QThread):
         if response_idx > 0:
             prompt = prompt.replace(f"#response#", self.response_list[-1])
 
-        response = call_openai(self.model, prompt, self.system_prompt, **self.ai_config)
+        response = call_openai(self.client, self.model, prompt, self.system_prompt, **self.ai_config)
 
         response_str = ""
         for event in response: 
-            event_text = event['choices'][0]['delta']
-            new_text = event_text.get('content', '')
-            self.new_text_ready.emit(new_text)
-            response_str += new_text
+            new_text = event.choices[0].delta.content
+            if new_text:
+                self.new_text_ready.emit(new_text)
+                response_str += new_text
             time.sleep(self.delay_time)
 
         if self.play_sound:

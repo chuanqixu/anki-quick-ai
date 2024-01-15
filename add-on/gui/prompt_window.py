@@ -106,11 +106,11 @@ class PromptNameTableWidget(QWidget):
         if row > -1:
             box = QMessageBox.question(self, 'Delete', 'Are you sure you want to delete this item?')
 
-            if box == QMessageBox.Yes:
+            if box == QMessageBox.StandardButton.Yes:
                 prompt_name = self.table.item(row, 0).text()
                 self.table.removeRow(row)
                 self.prompt_data.pop(prompt_name)
-    
+
     def table_updated(self, item):
         # Get the old and new texts of the item
         row = item.row()
@@ -389,7 +389,7 @@ class TableWidget(QWidget):
         if row > -1:
             box = QMessageBox.question(self, 'Delete', 'Are you sure you want to delete this item?')
 
-            if box == QMessageBox.DialogCode.Yes:
+            if box == QMessageBox.StandardButton.Yes:
                 self.table.removeRow(row)
                 self.save_data()
 
@@ -593,7 +593,7 @@ class NoteFieldTableWidget(QWidget):
         if row > -1:
             box = QMessageBox.question(self, 'Delete', 'Are you sure you want to delete this item?')
 
-            if box == QMessageBox.Yes:
+            if box == QMessageBox.StandardButton.Yes:
                 self.table.removeRow(row)
                 self.save_data()
 

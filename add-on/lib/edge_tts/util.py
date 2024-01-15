@@ -15,7 +15,7 @@ from edge_tts import Communicate, SubMaker, list_voices
 async def _print_voices(*, proxy: str) -> None:
     """Print all available voices."""
     voices = await list_voices(proxy=proxy)
-    voices = sorted(voices, key=lambda voice: voice["ShortName"])  # type: ignore
+    voices = sorted(voices, key=lambda voice: voice["ShortName"])
     for idx, voice in enumerate(voices):
         if idx != 0:
             print()
@@ -57,6 +57,7 @@ async def _run_tts(args: Any) -> None:
         proxy=args.proxy,
         rate=args.rate,
         volume=args.volume,
+        pitch=args.pitch,
     )
     subs: SubMaker = SubMaker()
     with open(
@@ -97,6 +98,7 @@ async def amain() -> None:
     )
     parser.add_argument("--rate", help="set TTS rate. Default +0%%.", default="+0%")
     parser.add_argument("--volume", help="set TTS volume. Default +0%%.", default="+0%")
+    parser.add_argument("--pitch", help="set TTS pitch. Default +0Hz.", default="+0Hz")
     parser.add_argument(
         "--words-in-cue",
         help="number of words in a subtitle cue. Default: 10.",

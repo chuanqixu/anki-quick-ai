@@ -1,3 +1,5 @@
 openai
 edge-tts
 iso639
+pydantic==1.10.12
+httpx==0.24.0
