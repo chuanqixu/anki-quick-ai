@@ -37,8 +37,6 @@ def get_avail_chat_model_list(api_key):
     avail_chat_model_list = []
     try:
         openai.api_key = api_key
-        chat_model_list = ["gpt-4", "gpt-4-0314", "gpt-4-32k", "gpt-4-32k-0314", "gpt-3.5-turbo", "gpt-3.5-turbo-0301"]
-        model_list = [model["id"] for model in openai.Model.list()["data"]]
-        avail_chat_model_list = [model for model in chat_model_list if model in model_list]
+        avail_chat_model_list = [model["id"] for model in openai.Model.list()["data"] if model["id"].startswith("gpt")]
     finally:
         return avail_chat_model_list

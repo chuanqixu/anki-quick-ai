@@ -5,6 +5,12 @@
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
 
+### Version **1.0.7** 2024-01-14
+
+Fixed
+
+* Thanks for @quinn-p-mchugh. Models are now not hardcoded.
+
 ### Version **1.0.6** 2023-11-29
 
 Fixed
