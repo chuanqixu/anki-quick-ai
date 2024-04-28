@@ -1,42 +1,72 @@
 {
-    "general": {
-        "automatic_display": false,
-        "shortcut": "Alt+A",
-        "play_sound": true,
-        "default_sound_language": "English",
-        "default_edge_tts_voice": "Random"
+    "general":{
+       "automatic_display":false,
+       "shortcut":"Alt+A",
+       "play_sound":true,
+       "default_sound_language":"English",
+       "default_edge_tts_voice":"Random"
     },
-
-    "ai_config": {
-        "api_key": "",
-        "model": "API Key is not valid",
-        "temperature": 1.0,
-        "max_tokens": 2048,
-        "presence_penalty": 0,
-        "frequency_penalty": 0
+    "ai_config":{
+       "providers":[
+          "OpenAI",
+          "Groq"
+       ],
+       "provider":"OpenAI",
+       "api_key":"",
+       "model":"API Key is not valid",
+       "temperature":1.0,
+       "max_tokens":2048,
+       "presence_penalty":0,
+       "frequency_penalty":0
     },
-
-    "prompt": {
-        "Words Story": {
-            "default_query": "\"deck:current\" introduced:1",
-            "note_field": {
-                "Other Note Type": ["Front"]
-            },
-            "system_prompt": "You are a helpful assistant.",
-            "prompt": [
-                "I am going to remember these words: #field_value#. I want you do the following two things to help me remember these words. The first step is to list these words and their translation in #trans_lang#, one word per line. The second step is to write a creative and interesting story in #language# which is less than #num_words# words. Please make sure you include these words in the story. Feel free to conjugate these words to make the story creative and interesting. Do not translate the story.",
-                "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. Do not maintain the first parts containing words and their translation, and only translate the story. The text to be translated is:\n#response#"
-            ],
-            "placeholder": {
-                "1": {
-                    "num_words": "100",
-                    "trans_lang": "English"
-                }
-            },
-            "language": [
-                "Chinese",
-                "English"
-            ]
-        }
+    "prompt":{
+       "Words Story":{
+          "default_query":"\"deck:current\" introduced:1",
+          "note_field":{
+             "Other Note Type":[
+                "Front"
+             ]
+          },
+          "agentic_behavior":false,
+          "system_prompt":"You are a helpful assistant.",
+          "prompt":[
+             "I am going to remember these words: #field_value#. I want you do the following two things to help me remember these words. The first step is to list these words and their translation in #trans_lang#, one word per line. The second step is to write a creative and interesting story in #language# which is less than #num_words# words. Please make sure you include these words in the story. Feel free to conjugate these words to make the story creative and interesting. Do not translate the story.",
+             "Translate the given text to #language#. Be faithful or accurate in translation. Make the translation readable or intelligible. Be elegant or natural in translation. For the text cannot be translated, return the original text as is. Do not translate person's name. Do not add any additional text in the translation. Do not maintain the first parts containing words and their translation, and only translate the story. The text to be translated is:\n#response#"
+          ],
+          "placeholder":{
+             "1":{
+                "num_words":"100",
+                "trans_lang":"English"
+             }
+          },
+          "language":[
+             "Chinese",
+             "English"
+          ]
+       },
+       "Japanese card improver":{
+          "default_query":"deck:Review",
+          "note_field":{
+             "Educational":[
+                "Japanese",
+                "Context",
+                "Furigana",
+                "Translation",
+                "Breakdown",
+                "Pedagogy"
+             ]
+          },
+          "system_prompt":"You're an experienced Japanese language teacher who uses Anki App to help students learn Japanese. You're dedicated to creating exceptional flashcards that users remember easily for Anki App. Your goal is to generate high-quality flashcards with accurate content for each field in the note.",
+          "prompt":[
+             "Here is the content for each field in the note so far: #field_value# Japanese field should only contain the word using Kanji. Furigna field should contain the Japanese word with the pronunciation annotation on top. Context field should specify the context of the word. Pedagogy field should be a list of basic and easy example sentences that focus on the sentence in Japanese with English translation. Breakdown field should be the explanation of each component of the word. You mustn't leave any field empty. You're expected to improve coherence of the content in the note. You must do your best to provide accurate information for each field in the note. Output is JSON, featuring HTML content tailored to Anki's requirements as follows: #json_fields#"
+          ],
+          "placeholder":{
+             
+          },
+          "language":[
+             "English"
+          ],
+          "agentic_behavior":true
+       }
     }
-}
+ }

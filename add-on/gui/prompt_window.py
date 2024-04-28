@@ -2,7 +2,7 @@ import copy
 from aqt import mw
 
 from PyQt6.QtCore import Qt, pyqtSignal, QSettings
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QVBoxLayout, QPushButton, QTableWidgetItem, QMessageBox, QLabel, QLineEdit, QTextEdit, QDialogButtonBox, QWidget, QComboBox, QScrollArea
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, QVBoxLayout, QPushButton, QTableWidgetItem, QMessageBox, QLabel, QLineEdit, QTextEdit, QDialogButtonBox, QWidget, QComboBox, QScrollArea, QCheckBox
 
 from ..utils import find_placeholder
 from ..ankiaddonconfig import ConfigManager
@@ -189,6 +189,12 @@ class PromptConfigDialog(QDialog):
         layout.addWidget(label)
         layout.addSpacing(10)
 
+        agentic_behavior = bool(self.prompt_config_data["agentic_behavior"]) if self.prompt_config_data and self.prompt_config_data.get("agentic_behavior") else False
+        self.agentic_behavior = QCheckBox("Per note agentic behavior")
+        self.agentic_behavior.setChecked(agentic_behavior)
+        layout.addWidget(self.agentic_behavior)
+        layout.addSpacing(10)
+
         # System Prompt
         input_layout = QVBoxLayout()
         label = QLabel("<b>System Prompt:</b>")
@@ -266,6 +272,7 @@ class PromptConfigDialog(QDialog):
         self.prompt_config_data["prompt"] = self.prompt_table_widget.data
         self.prompt_config_data["placeholder"] = self.placeholder_table_widget.placeholder_dict
         self.prompt_config_data["language"] = self.language_table_widget.data
+        self.prompt_config_data["agentic_behavior"] = self.agentic_behavior.isChecked()
         self.is_changed = True
         self.close()
 
@@ -414,7 +421,7 @@ class PromptInputDialog(QDialog):
 
         layout = QVBoxLayout(self)
 
-        self.instructions = QLabel("Keyword placeholder:\n#field_value#: values in cards.\n#response#: previous response from OpenAI.\n#language#: language specified below.\n\nCustom placeholder: sandwich the placeholder with #.\n\nEnter the prompt here.")
+        self.instructions = QLabel("Keyword placeholder:\n#field_value#: values in cards.\n#response#: previous response from AI.\n#language#: language specified below. \n\nAgentic keyword placeholder: \n#json_fields#: expected result from AI in order to edit card field values \n\nCustom placeholder: sandwich the placeholder with #.\n\nEnter the prompt here.")
         layout.addWidget(self.instructions)
 
         self.textEdit = QTextEdit(text, self)

@@ -81,6 +81,13 @@ class ResponseDialog(QDialog):
         self.audio_player_widget_dict = {}
 
     def append_text(self, new_text):
+
+        # FIXCOL: Issue found when appending text to the last response widget
+        # Due to the parent of the widget being the Anki Card Browser
+        # The start_one_iter signal doesn't work as expected
+        if not self.response_widget_list:
+            self.new_response_widget("Something went wrong when initializing the response widget.")
+
         self.response_widget_list[-1].append_text(new_text)
 
     def new_response_widget(self, prompt):
@@ -130,6 +137,7 @@ class ResponseDialog(QDialog):
         super().closeEvent(event)
 
     def save_text(self):
+        
         # Retrieve the last used path for text, or use home directory if none is stored
         last_path = self.settings.value('LastTextPath', QDir.homePath())
         last_file = self.settings.value('LastTextFile', 'anki_quick_ai_text.txt')
@@ -179,6 +187,10 @@ class ResponseDialog(QDialog):
                     shutil.copy(os.path.join(src_audio_dir, filename), os.path.join(file_dir_path, filename))
 
     def add_audio_player_widget(self, filename):
+        if not self.response_widget_list:
+            self.new_response_widget("Something went wrong when initializing the response widget.")
+
+
         audio_player_widget = AudioPlayerWidget(filename)
         i = int(filename.split("_")[-1].split(".")[0])
         self.response_widget_list[i].add_audio_player_widget(audio_player_widget)
@@ -224,8 +236,12 @@ class ResponseWidget(QWidget):
             spacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
             self.main_layout.addItem(spacer)
 
-    def append_text(self, new_text):
-        self.curr_cursor.insertText(new_text)
+    def append_text(self, new_text, is_html=False):
+        if is_html:
+            self.curr_cursor.insertHtml(new_text)
+        else:
+            self.curr_cursor.insertText(new_text)
+
         self.curr_cursor.movePosition(QTextCursor.MoveOperation.End)
 
     def adjust_height(self):

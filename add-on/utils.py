@@ -1,15 +1,12 @@
 import re
 import html
 
-
-
 def remove_html_tags(text):
     # Unescape HTML entities
     text = html.unescape(text)
     # Use a regular expression to remove HTML tags
     text = re.sub(r'<.*?>', '', text)
     return text
-
 
 def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
     formatted_prompt_list = []
@@ -24,23 +21,24 @@ def format_prompt_list(prompt_list, placeholder_dict, language_list=None):
         formatted_prompt_list.append(prompt)
     return formatted_prompt_list
 
+def color_html(text, color='white'):
+    text = text.replace('\n', '<br/>')
+    return f"<font color='{color}'>{text}</font>"
 
-def prompt_html(prompt, color):
+def prompt_html(prompt, color='white'):
     return f"<font color='{color}'>Prompt: {prompt}</font><br><br>"
-
 
 def field_value_html(field_value_list, color):
     field_value_str = '<br>'.join(field_value_list)
 
-    return f"<font color='{color}'>Choosen values:</font><br>{field_value_str}"
-
+    return f"<font color='{color}'>Chosen values:</font><br>{field_value_str}"
 
 def find_placeholder(prompt):
     # Matches any string sandwiched by #
     matches = re.findall(r'#(.*?)#', prompt)
 
     # Ignore keyword placeholders
-    ignore_list = ['response', 'field_value', 'language']
+    ignore_list = ['response', 'field_value', 'language', 'json_fields']
     matches = [match for match in matches if match not in ignore_list]
 
     return matches

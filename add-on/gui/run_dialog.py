@@ -6,11 +6,11 @@ from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLine
 
 from .prompt_window import PromptConfigDialog
 
-
-
 class RunDialog(QDialog):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(mw)
+        # Workaround for dialog error (search: FIXCOL)
+        self.par = parent
         self.settings = QSettings('Anki', 'Anki Quick AI')
         self.initUI()
 
@@ -37,8 +37,22 @@ class RunDialog(QDialog):
         layout.addLayout(input_layout)
 
         # Browse query
-        if isinstance(self.parent(), Browser):
-            query = self.parent().form.searchEdit.lineEdit().text()
+        if isinstance(self.par, Browser):
+            cards = self.par.selected_cards()
+            notesId = []
+
+            for card_id in cards:
+                note_id = mw.col.getCard(card_id).note().id
+                if note_id not in notesId:
+                    notesId.append(note_id)
+
+            if len(notesId) > 0:
+                query = " OR ".join([f"nid:{note_id}" for note_id in notesId])
+            else:
+                query = self.par.form.searchEdit.lineEdit().text()
+                if not query:
+                    query = "deck:" + mw.col.decks.current()["name"]
+
         else:
             query = self.prompt_dict[self.curr_prompt_name]["default_query"]
 

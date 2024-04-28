@@ -1,5 +1,33 @@
+def get_note_id_list(collection, browse_cmd):
+    try:
+        note_id_list = collection.find_notes(browse_cmd)
+    except Exception as e:
+        note_id_list = [int(note_id.split(":")[1]) for note_id in browse_cmd.split(" OR ")]
+
+    return note_id_list
+
+def get_note_field_value_clean(collection, browse_cmd, note_field_config):
+ 
+    note_id_list = get_note_id_list(collection, browse_cmd)
+
+    field_value_list = []
+    for note_id in note_id_list:
+        note = collection.get_note(note_id)
+        note_type = note.note_type()["name"]
+        if note_type in note_field_config:
+            for field_name in note_field_config[note_type]:
+                if field_name in note:
+                    field_value_list.append(f"{field_name}: {note[field_name]}")
+        elif "Other Note Type" in note_field_config:
+            for field_name in note_field_config["Other Note Type"]:
+                if field_name in note:
+                    field_value_list.append(f"{field_name}: {note[field_name]}")
+
+    return (field_value_list)
+
 def get_note_field_value_list(collection, browse_cmd, note_field_config):
-    note_id_list = collection.find_notes(browse_cmd)
+
+    note_id_list = get_note_id_list(collection, browse_cmd)
 
     field_value_list = []
     for note_id in note_id_list:
