@@ -1,4 +1,5 @@
 openai
+groq==0.5.0
 edge-tts
 iso639
 pydantic==1.10.12

@@ -85,15 +85,26 @@ def ai_tab(conf_window: ConfigWindow) -> None:
 
     tab.text("Required", bold=True)
 
+    providers = conf.get("ai_config.providers")
+    default_api_provider = conf.get("ai_config.provider")
+    provider_combo = tab.dropdown(
+        "ai_config.provider",
+        providers,
+        providers,
+        "Provider:",
+        tooltip="Choose the provider for the AI model",
+        append_updates=False
+    )
+
     default_api_key = conf.get("ai_config.api_key")
     api_key_text_input = tab.text_input(
         "ai_config.api_key",
-        "OpenAI API Key:",
-        tooltip="Please go to OpenAI website to see how to acquire the key",
+        "API Key:",
+        tooltip="The supported APIs are OpenAI and Groq.",
     )
     tab.text('You can get API key <a href="https://platform.openai.com/account/api-keys">here</a>', html=True, size=10)
 
-    default_avail_chat_model_list = get_avail_chat_model_list(default_api_key)
+    default_avail_chat_model_list = get_avail_chat_model_list(default_api_provider, default_api_key)
     if len(default_avail_chat_model_list) == 0:
         default_avail_chat_model_list = ["API Key is not valid"]
     model_combo = tab.dropdown(
@@ -105,8 +116,8 @@ def ai_tab(conf_window: ConfigWindow) -> None:
         append_updates=False
     )
 
-    def update_model(api_key):
-        avail_chat_model_list = get_avail_chat_model_list(api_key)
+    def update_model(api_provider, api_key):
+        avail_chat_model_list = get_avail_chat_model_list(api_provider, api_key)
         if len(avail_chat_model_list) == 0:
             avail_chat_model_list = ["API Key is not valid"]
 
@@ -115,8 +126,9 @@ def ai_tab(conf_window: ConfigWindow) -> None:
         if api_key == default_api_key:
             model_combo.setCurrentText(conf.get("ai_config.model"))
 
-    tab.widget_updates.insert(0, lambda: update_model(conf_window.conf.get("ai_config.api_key")))
-    api_key_text_input.textChanged.connect(update_model)
+    tab.widget_updates.insert(0, lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
+    api_key_text_input.textChanged.connect(lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
+    provider_combo.currentTextChanged.connect(lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
 
     tab.space(20)
 
