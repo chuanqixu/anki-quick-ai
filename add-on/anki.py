@@ -7,7 +7,6 @@ def get_note_id_list(collection, browse_cmd):
     return note_id_list
 
 def get_note_field_value_clean(collection, browse_cmd, note_field_config):
- 
     note_id_list = get_note_id_list(collection, browse_cmd)
 
     field_value_list = []
@@ -26,7 +25,6 @@ def get_note_field_value_clean(collection, browse_cmd, note_field_config):
     return (field_value_list)
 
 def get_note_field_value_list(collection, browse_cmd, note_field_config):
-
     note_id_list = get_note_id_list(collection, browse_cmd)
 
     field_value_list = []

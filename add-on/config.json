@@ -7,10 +7,6 @@
        "default_edge_tts_voice":"Random"
     },
     "ai_config":{
-       "providers":[
-          "OpenAI",
-          "Groq"
-       ],
        "provider":"OpenAI",
        "api_key":"",
        "model":"API Key is not valid",

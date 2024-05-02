@@ -3,8 +3,9 @@ from PyQt6.QtWidgets import QComboBox
 
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
 from .prompt_window import PromptNameTableWidget
-from ..edge_tts_data import language_list, get_voice_list
+from ..ai.edge_tts_data import language_list, get_voice_list
 from ..ai import get_avail_chat_model_list
+from ..ai.provider import providers
 
 
 
@@ -85,7 +86,6 @@ def ai_tab(conf_window: ConfigWindow) -> None:
 
     tab.text("Required", bold=True)
 
-    providers = conf.get("ai_config.providers")
     default_api_provider = conf.get("ai_config.provider")
     provider_combo = tab.dropdown(
         "ai_config.provider",

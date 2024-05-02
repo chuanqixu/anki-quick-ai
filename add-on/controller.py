@@ -13,7 +13,7 @@ from .anki import get_note_field_value_list, get_note_id_list, get_note_field_va
 from .ai import call_llm, make_edge_tts_mp3
 from .gui import RunDialog, ResponseDialog, conf
 from .utils import remove_html_tags, format_prompt_list, color_html, prompt_html, field_value_html
-from .edge_tts_data import get_voice_list
+from .ai.edge_tts_data import get_voice_list
 
 IS_BROWSE_OPEN = False
 
@@ -77,11 +77,16 @@ class AIThread(QThread):
             pass
 
     def run(self):
-        self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field_config) if not self.agentic_behavior else get_note_field_value_clean(mw.col, self.query, self.note_field_config)
+        if self.agentic_behavior:
+            self.field_value_list = get_note_field_value_clean(mw.col, self.query, self.note_field_config)
+        else:
+            self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field_config)
+
         self.field_value_ready.emit(self.field_value_list)
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
+        # TODO: check api_key and model is given
         if not self.ai_config.get("api_key") or not self.ai_config.get("model"):
             return
 
@@ -102,23 +107,23 @@ class AIThread(QThread):
         if self.agentic_behavior:
             note_fields = note_fields = {field.split(":")[0]: f"<value for {field.split(':')[0].lower()} field>" for field in self.field_value_list}
             prompt = prompt.replace(f"#json_fields#", json.dumps(note_fields, indent=2))
-        
+
         self.start_one_iter.emit(prompt_html_str)
 
-        response = call_llm(self.provider, self.api_key, self.model, prompt, self.system_prompt, **self.ai_config)
+        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.ai_config)
 
         response_str = ""
         
-        if isinstance(response, list):        
+        if isinstance(response, str):
+            self.new_text_ready.emit(response)
+            response_str += response
+        else:        
             for event in response: 
                 new_text = event.choices[0].delta.content
                 if new_text:
                     self.new_text_ready.emit(new_text)
                     response_str += new_text
                 time.sleep(self.delay_time)
-        elif isinstance(response, str):
-            self.new_text_ready.emit(response)
-            response_str += response
 
         if self.play_sound:
             self.finished_one_iter.emit(response_idx, response_str)
