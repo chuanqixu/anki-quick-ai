@@ -2,6 +2,7 @@
 # Add to the beginning: from .provider import Provider
 # Define the class "Provider{provider_name}" and inherit from Provider
 # Implement: 1. __call__; 2. get_avail_chat_model_list; 3.update_api_key
+# Add arguments for the provider in meta.json: ai_config
 
 
 import os, re, importlib

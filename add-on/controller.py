@@ -36,7 +36,7 @@ class AIThread(QThread):
         self.system_prompt = prompt_config["system_prompt"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
-        self.agentic_behavior = prompt_config["agentic_behavior"] if prompt_config.get("agentic_behavior") else False
+        self.agentic_behavior = prompt_config["agentic_behavior"]
         self.default_language = config["general"]["default_sound_language"]
         self.voice = config["general"]["default_edge_tts_voice"]
 
@@ -86,14 +86,11 @@ class AIThread(QThread):
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
-        # TODO: check api_key and model is given
-        if not self.ai_config.get("api_key") or not self.ai_config.get("model"):
-            return
-
         self.provider = self.ai_config.pop("provider")
         self.api_key = self.ai_config.pop("api_key")
         self.model = self.ai_config.pop("model")
 
+        # TODO: check api_key and model is given
         self.initial_response()
 
     def response(self, prompt):

@@ -72,7 +72,7 @@ def prompt_tab(conf_window: ConfigWindow) -> None:
 
     prompt_name_table_widget = PromptNameTableWidget(conf)
     tab.layout().addWidget(prompt_name_table_widget)
-    conf_window.execute_on_save(lambda: conf.set("prompt", prompt_name_table_widget.prompt_data))
+    conf_window.execute_on_save(lambda: conf.set("prompt", prompt_name_table_widget.data))
     conf_window.widget_updates.append(prompt_name_table_widget.load_data)
 
     # This adds a stretchable blank space.
@@ -127,8 +127,8 @@ def ai_tab(conf_window: ConfigWindow) -> None:
             model_combo.setCurrentText(conf.get("ai_config.model"))
 
     tab.widget_updates.insert(0, lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
-    api_key_text_input.textChanged.connect(lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
-    provider_combo.currentTextChanged.connect(lambda: update_model(conf_window.conf.get("ai_config.provider"), conf_window.conf.get("ai_config.api_key")))
+    api_key_text_input.textChanged.connect(lambda text: update_model(conf_window.conf.get("ai_config.provider"), text))
+    provider_combo.currentTextChanged.connect(lambda text: update_model(text, conf_window.conf.get("ai_config.api_key")))
 
     tab.space(20)
 
