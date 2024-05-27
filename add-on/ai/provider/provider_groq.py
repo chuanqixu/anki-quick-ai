@@ -4,7 +4,9 @@ from groq import Groq
 class ProviderGroq(Provider):
     def __init__(self, api_key, **kwargs):
         super().__init__(api_key, **kwargs)
-        self.client = Groq(api_key=api_key)
+
+    def get_client(self):
+        return Groq(api_key=self.api_key)
 
     def __call__(self, model, prompt, **kwargs):
         messages = [{"role": "user", "content": prompt}]
@@ -25,7 +27,3 @@ class ProviderGroq(Provider):
             avail_chat_model_list = [model.id for model in models if model.id.startswith("gpt")]
         finally:
             return avail_chat_model_list
-
-    def update_api_key(self, api_key):
-        self.api_key = api_key
-        self.client = Groq(api_key=api_key)

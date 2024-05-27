@@ -2,18 +2,28 @@
    "general":{
       "automatic_display":false,
       "shortcut":"Alt+A",
-      "play_sound":true,
+      "play_sound":false,
       "default_sound_language":"English",
       "default_edge_tts_voice":"Random"
    },
    "ai_config":{
-      "provider":"OpenAI",
-      "api_key":"",
-      "model":"API Key is not valid",
-      "temperature":1.0,
-      "max_tokens":2048,
-      "presence_penalty":0,
-      "frequency_penalty":0
+      "default_provider":"OpenAI",
+      "OpenAI": {
+         "api_key":"",
+         "model":"API Key is not valid",
+         "temperature":1.0,
+         "max_tokens":2048,
+         "presence_penalty":0,
+         "frequency_penalty":0
+      },
+      "Groq": {
+         "api_key":"",
+         "model":"API Key is not valid",
+         "temperature":1.0,
+         "max_tokens":2048,
+         "presence_penalty":0,
+         "frequency_penalty":0
+      }
    },
    "prompt":{
       "Words Story":{

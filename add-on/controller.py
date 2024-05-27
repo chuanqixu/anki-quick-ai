@@ -86,9 +86,9 @@ class AIThread(QThread):
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
-        self.provider = self.ai_config.pop("provider")
-        self.api_key = self.ai_config.pop("api_key")
-        self.model = self.ai_config.pop("model")
+        self.provider = self.ai_config.pop("default_provider")
+        self.api_key = self.ai_config[self.provider].pop("api_key")
+        self.model = self.ai_config[self.provider].pop("model")
 
         # TODO: check api_key and model is given
         self.initial_response()
@@ -107,7 +107,7 @@ class AIThread(QThread):
 
         self.start_one_iter.emit(prompt_html_str)
 
-        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.ai_config)
+        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.ai_config[self.provider])
 
         response_str = ""
         

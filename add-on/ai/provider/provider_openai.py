@@ -4,7 +4,9 @@ from openai import OpenAI
 class ProviderOpenAI(Provider):
     def __init__(self, api_key, **kwargs):
         super().__init__(api_key, **kwargs)
-        self.client = OpenAI(api_key=api_key)
+
+    def get_client(self):
+        return OpenAI(api_key=self.api_key)
 
     def __call__(self, model, prompt, **kwargs):
         try:
@@ -29,7 +31,3 @@ class ProviderOpenAI(Provider):
             avail_chat_model_list = [model.id for model in models if model.id.startswith("gpt")]
         finally:
             return avail_chat_model_list
-
-    def update_api_key(self, api_key):
-        self.api_key = api_key
-        self.client = OpenAI(api_key=api_key)
