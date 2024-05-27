@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QDialog, QComboBox
 
 from .prompt_window import PromptConfigDialog
+from ..ai.provider import providers
 
 class RunDialog(QDialog):
     def __init__(self, parent=None):
@@ -18,7 +19,26 @@ class RunDialog(QDialog):
         # Main layout
         layout = QVBoxLayout()
         self.setLayout(layout)
+        self.default_provider = mw.addonManager.getConfig(__name__)["ai_config"]["default_provider"]
         self.prompt_dict = mw.addonManager.getConfig(__name__)["prompt"]
+
+        # reload last prompt name
+        provider_name = self.settings.value('ProviderName')
+
+        # provider
+        provider_layout = QHBoxLayout()
+        provider_label = QLabel("Provider:")
+        provider_layout.addWidget(provider_label)
+        self.provider_box = QComboBox(self)
+        self.provider_box.addItems(providers)
+        if provider_name:
+            self.provider_box.setCurrentText(provider_name)
+        else:
+            self.provider_box.setCurrentText(self.default_provider)
+        provider_layout.addWidget(self.provider_box)
+        self.provider_box.currentIndexChanged.connect(self.provider_changed)
+        self.curr_provider_name = self.provider_box.currentText()
+        layout.addLayout(provider_layout)
 
         # reload last prompt name
         prompt_name = self.settings.value('PromptName')
@@ -84,6 +104,9 @@ class RunDialog(QDialog):
         cancel_button.setFixedSize(100, 40)  # set the size of the button
         layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
+    def provider_changed(self, index):
+        self.curr_provider_name = self.provider_box.itemText(index)
+
     def prompt_changed(self, index):
         self.curr_prompt_name = self.prompt_box.itemText(index)
 
@@ -94,6 +117,6 @@ class RunDialog(QDialog):
             self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.prompt_config_data
 
     def closeEvent(self, event):
-        # Save the current size of the dialog when it's closed
+        self.settings.setValue('ProviderName', self.curr_provider_name)
         self.settings.setValue('PromptName', self.curr_prompt_name)
         super().closeEvent(event)

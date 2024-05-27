@@ -24,9 +24,10 @@ class AIThread(QThread):
     finished_one_iter = pyqtSignal(int, str)
     finished_gen_sound = pyqtSignal(str)
 
-    def __init__(self, prompt_config, ai_config=None, play_sound=None):
+    def __init__(self, provider, prompt_config, ai_config=None, play_sound=None):
         super().__init__()
         config = mw.addonManager.getConfig(__name__)
+        self.provider = provider
         self.ai_config = ai_config
         if not ai_config:
             self.ai_config = config["ai_config"]
@@ -86,7 +87,6 @@ class AIThread(QThread):
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
-        self.provider = self.ai_config.pop("default_provider")
         self.api_key = self.ai_config[self.provider].pop("api_key")
         self.model = self.ai_config[self.provider].pop("model")
 
@@ -170,7 +170,7 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
 
 
 
-def gen_response(prompt_config, parent=None, response_dialog=None, recursive=False):
+def gen_response(provider, prompt_config, parent=None, response_dialog=None, recursive=False):
     try:
         if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
             shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
@@ -185,7 +185,7 @@ def gen_response(prompt_config, parent=None, response_dialog=None, recursive=Fal
     def show_dialog(field_value_list):
         initial_text = field_value_html(field_value_list, "green")
         dialog = ResponseDialog(initial_text, ai_thread, parent)
-        dialog.regen_button.clicked.connect(lambda: gen_response(prompt_config, parent, dialog))
+        dialog.regen_button.clicked.connect(lambda: gen_response(provider, prompt_config, parent, dialog))
         dialog.setModal(False)
         dialog.show()
 
@@ -197,9 +197,9 @@ def gen_response(prompt_config, parent=None, response_dialog=None, recursive=Fal
             new_query = f"nid:{note}"
             prompt_config["query"] = new_query
 
-            gen_response(prompt_config, parent=parent, response_dialog=response_dialog, recursive=True)
+            gen_response(provider, prompt_config, parent=parent, response_dialog=response_dialog, recursive=True)
     else:
-        ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"])
+        ai_thread = AIThread(provider, prompt_config, config["ai_config"], config["general"]["play_sound"])
         ai_thread.start()
         ai_thread.field_value_ready.connect(show_dialog)
 
@@ -209,10 +209,12 @@ def run_add_on(parent=None):
         parent = mw
 
     def click_run_add_on(run_widget):
+        provider = run_widget.provider_box.currentText()
         prompt_config = run_widget.prompt_dict[run_widget.curr_prompt_name]
         prompt_config["query"] = run_widget.input_field_browse_query.text()
         run_widget.close()
         gen_response(
+            provider,
             prompt_config,
             parent=parent
         )
