@@ -1,25 +1,21 @@
-from aqt import mw, gui_hooks
+from aqt import mw, gui_hooks, browser
 from aqt.qt import QAction, qconnect
 
 from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtCore import QThread, pyqtSignal
-import openai
 import os
 import time
 import threading
 import shutil
+import json
 
-from .anki import get_note_field_value_list
-from .ai import call_openai, make_edge_tts_mp3
+from .anki import get_note_field_value_list, get_note_id_list, get_note_field_value_clean
+from .ai import call_llm, make_edge_tts_mp3
 from .gui import RunDialog, ResponseDialog, conf
-from .utils import remove_html_tags, format_prompt_list, prompt_html, field_value_html
-from .edge_tts_data import get_voice_list
-
-
+from .utils import remove_html_tags, format_prompt_list, color_html, prompt_html, field_value_html
+from .ai.edge_tts_data import get_voice_list
 
 IS_BROWSE_OPEN = False
-
-
 
 class AIThread(QThread):
     field_value_ready = pyqtSignal(list)
@@ -28,18 +24,20 @@ class AIThread(QThread):
     finished_one_iter = pyqtSignal(int, str)
     finished_gen_sound = pyqtSignal(str)
 
-    def __init__(self, prompt_config, ai_config=None, play_sound=None):
+    def __init__(self, provider, provider_config, prompt_config, play_sound=None):
         super().__init__()
         config = mw.addonManager.getConfig(__name__)
-        self.ai_config = ai_config
-        if not ai_config:
-            self.ai_config = config["ai_config"]
+        self.provider = provider
+        self.provider_config = provider_config
+        if not provider_config:
+            self.provider_config = config["ai_config"][provider]
 
         self.query = prompt_config["query"]
         self.note_field_config = prompt_config["note_field"]
         self.system_prompt = prompt_config["system_prompt"]
         self.prompt_list = prompt_config["prompt"]
         self.language_list = prompt_config["language"]
+        self.agentic_behavior = prompt_config["agentic_behavior"]
         self.default_language = config["general"]["default_sound_language"]
         self.voice = config["general"]["default_edge_tts_voice"]
 
@@ -52,39 +50,80 @@ class AIThread(QThread):
         if self.play_sound:
             self.finished_one_iter.connect(self.gen_sound)
 
+        if self.agentic_behavior:
+            self.finished_one_iter.connect(self.run_agentic_job)
+
+    def run_agentic_job(self, i, output):
+        try:
+            output = output.replace("```json", "```")
+            start = output.find("```")
+            end = output.rfind("```")
+            output = output[start+3:end]
+            json_out = json.loads(output.strip())
+
+            note = mw.col.getNote(int(self.query.split(":")[1]))
+
+            updated_fields = []
+
+            for key, value in json_out.items():
+                if key in note:
+                    note[key] = value
+                    updated_fields.append(key)
+
+            note.flush()
+            
+            self.new_text_ready.emit("\n\n======== AGENT RESPONSE ========")
+            self.new_text_ready.emit(f"\nAgent updated the fields: {', '.join(updated_fields)}")
+        except Exception as e:
+            pass
+
     def run(self):
-        self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field_config)
+        if self.agentic_behavior:
+            self.field_value_list = get_note_field_value_clean(mw.col, self.query, self.note_field_config)
+        else:
+            self.field_value_list = get_note_field_value_list(mw.col, self.query, self.note_field_config)
+
         self.field_value_ready.emit(self.field_value_list)
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
-        # TODO: check api_key and model is given
-        self.api_key = self.ai_config.pop("api_key")
-        self.model = self.ai_config.pop("model")
+        self.api_key = self.provider_config.pop("api_key")
+        self.model = self.provider_config.pop("model")
 
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # TODO: check api_key and model is given
         self.initial_response()
 
     def response(self, prompt):
         response_idx = len(self.response_list)
         prompt_html_str = prompt_html(prompt, "green")
-        self.start_one_iter.emit(prompt_html_str)
         prompt = prompt.replace(f"#field_value#", str(self.field_value_list))
+        prompt = prompt.replace(f"#language#", self.language_list[response_idx] if response_idx < len(self.language_list) else self.default_language)
         if response_idx > 0:
             prompt = prompt.replace(f"#response#", self.response_list[-1])
 
-        response = call_openai(self.client, self.model, prompt, self.system_prompt, **self.ai_config)
+        if self.agentic_behavior:
+            note_fields = note_fields = {field.split(":")[0]: f"<value for {field.split(':')[0].lower()} field>" for field in self.field_value_list}
+            prompt = prompt.replace(f"#json_fields#", json.dumps(note_fields, indent=2))
+
+        self.start_one_iter.emit(prompt_html_str)
+        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.provider_config)
 
         response_str = ""
-        for event in response: 
-            new_text = event.choices[0].delta.content
-            if new_text:
-                self.new_text_ready.emit(new_text)
-                response_str += new_text
-            time.sleep(self.delay_time)
+        
+        if isinstance(response, str):
+            self.new_text_ready.emit(response)
+            response_str += response
+        else:        
+            for event in response: 
+                new_text = event.choices[0].delta.content
+                if new_text:
+                    self.new_text_ready.emit(new_text)
+                    response_str += new_text
+                time.sleep(self.delay_time)
 
         if self.play_sound:
             self.finished_one_iter.emit(response_idx, response_str)
+        
         self.response_list.append(response_str)
 
     def initial_response(self):
@@ -130,7 +169,7 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
 
 
 
-def gen_response(prompt_config, parent=None, response_dialog=None):
+def gen_response(provider, provider_config, prompt_config, parent=None, response_dialog=None, recursive=False):
     try:
         if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
             shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
@@ -142,17 +181,26 @@ def gen_response(prompt_config, parent=None, response_dialog=None):
     config = mw.addonManager.getConfig(__name__)
     prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
 
-    ai_thread = AIThread(prompt_config, config["ai_config"], config["general"]["play_sound"])
-    ai_thread.start()
-
     def show_dialog(field_value_list):
         initial_text = field_value_html(field_value_list, "green")
         dialog = ResponseDialog(initial_text, ai_thread, parent)
-        dialog.regen_button.clicked.connect(lambda: gen_response(prompt_config, parent, dialog))
+        dialog.regen_button.clicked.connect(lambda: gen_response(provider, prompt_config, parent, dialog))
         dialog.setModal(False)
         dialog.show()
 
-    ai_thread.field_value_ready.connect(show_dialog)
+    has_agentic_behavior = prompt_config.get("agentic_behavior") if prompt_config.get("agentic_behavior") else False
+
+    if has_agentic_behavior and not recursive:
+        notes = get_note_id_list(mw.col, prompt_config["query"])
+        for note in notes:
+            new_query = f"nid:{note}"
+            prompt_config["query"] = new_query
+
+            gen_response(provider, provider_config, prompt_config, parent=parent, response_dialog=response_dialog, recursive=True)
+    else:
+        ai_thread = AIThread(provider, provider_config, prompt_config, config["general"]["play_sound"])
+        ai_thread.start()
+        ai_thread.field_value_ready.connect(show_dialog)
 
 
 def run_add_on(parent=None):
@@ -160,10 +208,14 @@ def run_add_on(parent=None):
         parent = mw
 
     def click_run_add_on(run_widget):
+        provider = run_widget.provider_box.currentText()
+        provider_config = run_widget.provider_config
         prompt_config = run_widget.prompt_dict[run_widget.curr_prompt_name]
         prompt_config["query"] = run_widget.input_field_browse_query.text()
         run_widget.close()
         gen_response(
+            provider,
+            provider_config,
             prompt_config,
             parent=parent
         )
@@ -192,10 +244,6 @@ def run_add_on_browse(browser):
     shortcut = QShortcut(QKeySequence(shortcut), browser)
     shortcut.activated.connect(lambda: run_add_on(browser))
 
-
-
-
-
 #  initiate connect and hooks
 
 def init_control():
@@ -215,3 +263,10 @@ def init_control():
     shortcut = mw.addonManager.getConfig(__name__)["general"]["shortcut"]
     shortcut = QShortcut(QKeySequence(shortcut), mw)
     shortcut.activated.connect(run_add_on)
+
+@gui_hooks.browser_menus_did_init.append
+def on_browser_menus_did_init(browser: browser.Browser):
+    action = QAction("Anki Quick AI: Run on selected items", browser)
+    action.triggered.connect(lambda: run_add_on(browser))
+    browser.form.menu_Cards.addSeparator()
+    browser.form.menu_Cards.addAction(action)

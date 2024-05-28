@@ -62,7 +62,20 @@ For usage, you should create your default prompt settings in the "prompt" tag of
 5. placeholder: A dict contains customized placeholders. The key is the name of the placeholder. The value is another dict, whose key is the index of the prompt that will be replaced, and the value is the string to replace the placeholder. **You cannot and do not need to specify "field_value", "response", or "language".**
 6.language: Languages for the generated audio.
 
+## Custom API Provider
 
+1. Provider API (Directory `add-on/ai/provider`):
+    1. Create a new provider in the directory by name `provider_{provider_name}.py`
+    2. Add to the beginning: `from .provider import Provider`
+    3. Define the class `Provider{provider_name}` and inherit from `Provider`
+    4. Implement: 1. `get_client()`; 2. `__call__()`; 3. `get_avail_chat_model_list()`. Please see example of [provider_openai.py](./add-on/ai/provider/provider_openai.py)
+    5. Add arguments for the provider in `meta.json: ai_config` in the directory`add-on`
+2. Provider setting and configure GUI (Directory `add-on/gui/provider`)
+    1. Create a new config layout for a provider in the directory by name `ai_config_layout_{provider_name}.py`
+    2. Add to the beginning: `from .ai_config_layout import AIConfigLayout`
+    3. Define the class `AIConfigLayout{provider_name}` and inherit from `AIConfigLayout`
+    4. Implement: `advanced()` if needed
+    5. Add arguments for the provider `in meta.json: ai_config`
 
 ## Setup (Optional)
 

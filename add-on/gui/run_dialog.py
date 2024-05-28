@@ -5,12 +5,18 @@ from PyQt6.QtCore import Qt, QSettings
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QDialog, QComboBox
 
 from .prompt_window import PromptConfigDialog
+from ..ai.provider import providers
+from .provider import *
+from ..ankiaddonconfig import ConfigWindow, ConfigManager
 
+run_conf = ConfigManager()
 
 
 class RunDialog(QDialog):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(mw)
+        # Workaround for dialog error (search: FIXCOL)
+        self.par = parent
         self.settings = QSettings('Anki', 'Anki Quick AI')
         self.initUI()
 
@@ -18,7 +24,34 @@ class RunDialog(QDialog):
         # Main layout
         layout = QVBoxLayout()
         self.setLayout(layout)
+        self.default_provider = mw.addonManager.getConfig(__name__)["ai_config"]["default_provider"]
         self.prompt_dict = mw.addonManager.getConfig(__name__)["prompt"]
+
+        # reload provider config
+        provider_name = self.settings.value('ProviderName')
+        self.provider_config = run_conf.get("ai_config." + provider_name)
+
+        # provider
+        provider_layout = QHBoxLayout()
+        provider_label = QLabel("Provider:")
+        provider_layout.addWidget(provider_label)
+        self.provider_box = QComboBox(self)
+        self.provider_box.addItems(providers)
+        if provider_name:
+            self.provider_box.setCurrentText(provider_name)
+        else:
+            self.provider_box.setCurrentText(self.default_provider)
+        provider_layout.addWidget(self.provider_box)
+        self.provider_box.currentIndexChanged.connect(self.provider_changed)
+        self.curr_provider_name = self.provider_box.currentText()
+        layout.addLayout(provider_layout)
+
+        # Configure Provider
+        self.provider_config_button = QPushButton("Configure Provider")
+        self.provider_config_button.clicked.connect(self.config_provider)
+        layout.addWidget(self.provider_config_button)
+
+        layout.addSpacing(20)
 
         # reload last prompt name
         prompt_name = self.settings.value('PromptName')
@@ -37,8 +70,22 @@ class RunDialog(QDialog):
         layout.addLayout(input_layout)
 
         # Browse query
-        if isinstance(self.parent(), Browser):
-            query = self.parent().form.searchEdit.lineEdit().text()
+        if isinstance(self.par, Browser):
+            cards = self.par.selected_cards()
+            notesId = []
+
+            for card_id in cards:
+                note_id = mw.col.getCard(card_id).note().id
+                if note_id not in notesId:
+                    notesId.append(note_id)
+
+            if len(notesId) > 0:
+                query = " OR ".join([f"nid:{note_id}" for note_id in notesId])
+            else:
+                query = self.par.form.searchEdit.lineEdit().text()
+                if not query:
+                    query = "deck:" + mw.col.decks.current()["name"]
+
         else:
             query = self.prompt_dict[self.curr_prompt_name]["default_query"]
 
@@ -70,16 +117,47 @@ class RunDialog(QDialog):
         cancel_button.setFixedSize(100, 40)  # set the size of the button
         layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
 
+    def provider_changed(self, index):
+        self.curr_provider_name = self.provider_box.itemText(index)
+
+    def config_provider(self):
+        provider_config_dialog = QDialog(self)
+        config_window = ConfigWindow(run_conf)
+        config_window.on_open()
+        provider_layout = globals()["ai_config_layout_" + self.provider_box.currentText()](config_window, run_conf)
+        provider_config_dialog.setLayout(provider_layout)
+
+        button_layout = QHBoxLayout()
+        # save button
+        save_button = QPushButton("Save")
+        def save():
+            self.provider_config = config_window.conf._config["ai_config"][self.curr_provider_name]
+            provider_config_dialog.close()
+        save_button.clicked.connect(save)
+        save_button.setFixedSize(100, 40)  # set the size of the button
+        button_layout.addWidget(save_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
+
+        # Cancel button
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(provider_config_dialog.close)
+        cancel_button.setFixedSize(100, 40)  # set the size of the button
+        button_layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
+        provider_layout.addLayout(button_layout)
+
+        # raise Exception(provider_layout.config_window.conf._config)
+
+        provider_config_dialog.exec()
+
     def prompt_changed(self, index):
         self.curr_prompt_name = self.prompt_box.itemText(index)
 
     def config_prompt(self):
-        prompt_config_dialog = PromptConfigDialog(prompt_name=None, prompt_config_data=self.prompt_dict[self.curr_prompt_name], in_run_dialog=True)
+        prompt_config_dialog = PromptConfigDialog(config_data=self.prompt_dict[self.curr_prompt_name], in_run_dialog=True)
         prompt_config_dialog.exec()
         if prompt_config_dialog.is_changed:
             self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.prompt_config_data
 
     def closeEvent(self, event):
-        # Save the current size of the dialog when it's closed
+        self.settings.setValue('ProviderName', self.curr_provider_name)
         self.settings.setValue('PromptName', self.curr_prompt_name)
         super().closeEvent(event)

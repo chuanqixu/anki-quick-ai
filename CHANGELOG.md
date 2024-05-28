@@ -4,6 +4,18 @@
 
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
+### Version **1.0.9** 2024-04-28
+
+(In this update, changes have been made to the structure of the configuration file)
+
+Added
+
+* Option to select AI Provider: Now you can choose between OpenAI or Groq API for inference.
+* Browser Note Selection: Your query will dynamically update based on the cards you select.
+* Enhanced Browser Menu: Introducing an additional "Anki Quick Ai" option in the context menu of browser cards.
+* Agentic Behavior: Cards can be updated using AI output resulting in a dedicated thread per note along with its fields.
+* New Placeholder #json_fields#: Representing an expected JSON string returned by the AI model, intended to be managed by the agent.
+
 ### Version **1.0.8** 2024-01-15
 
 Changed
