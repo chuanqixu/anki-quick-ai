@@ -5,8 +5,8 @@ from ...ai import get_avail_chat_model_list, special_names
 from ...ankiaddonconfig import ConfigLayout
 
 class AIConfigLayout(ConfigLayout):
-    def __init__(self, conf_window, conf) -> None:
-        super().__init__(conf_window, QBoxLayout.Direction.TopToBottom)
+    def __init__(self, config_window, conf) -> None:
+        super().__init__(config_window, QBoxLayout.Direction.TopToBottom)
         subclass_file = inspect.stack()[1][1]
         filename = os.path.basename(subclass_file)
         filename = filename.replace("ai_config_layout_", "").replace(".py", "")

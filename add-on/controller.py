@@ -24,13 +24,13 @@ class AIThread(QThread):
     finished_one_iter = pyqtSignal(int, str)
     finished_gen_sound = pyqtSignal(str)
 
-    def __init__(self, provider, prompt_config, ai_config=None, play_sound=None):
+    def __init__(self, provider, provider_config, prompt_config, play_sound=None):
         super().__init__()
         config = mw.addonManager.getConfig(__name__)
         self.provider = provider
-        self.ai_config = ai_config
-        if not ai_config:
-            self.ai_config = config["ai_config"]
+        self.provider_config = provider_config
+        if not provider_config:
+            self.provider_config = config["ai_config"][provider]
 
         self.query = prompt_config["query"]
         self.note_field_config = prompt_config["note_field"]
@@ -87,8 +87,8 @@ class AIThread(QThread):
 
         time.sleep(0.1) # make sure the first prompt will be printed
 
-        self.api_key = self.ai_config[self.provider].pop("api_key")
-        self.model = self.ai_config[self.provider].pop("model")
+        self.api_key = self.provider_config.pop("api_key")
+        self.model = self.provider_config.pop("model")
 
         # TODO: check api_key and model is given
         self.initial_response()
@@ -106,8 +106,7 @@ class AIThread(QThread):
             prompt = prompt.replace(f"#json_fields#", json.dumps(note_fields, indent=2))
 
         self.start_one_iter.emit(prompt_html_str)
-
-        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.ai_config[self.provider])
+        response = call_llm(self.provider, self.api_key, self.model, prompt, **self.provider_config)
 
         response_str = ""
         
@@ -170,7 +169,7 @@ class SoundGenThread(threading.Thread): # Cannot be QThread, otherwise will caus
 
 
 
-def gen_response(provider, prompt_config, parent=None, response_dialog=None, recursive=False):
+def gen_response(provider, provider_config, prompt_config, parent=None, response_dialog=None, recursive=False):
     try:
         if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")):
             shutil.rmtree(os.path.join(os.path.dirname(os.path.dirname(__file__)), "output"))
@@ -197,9 +196,9 @@ def gen_response(provider, prompt_config, parent=None, response_dialog=None, rec
             new_query = f"nid:{note}"
             prompt_config["query"] = new_query
 
-            gen_response(provider, prompt_config, parent=parent, response_dialog=response_dialog, recursive=True)
+            gen_response(provider, provider_config, prompt_config, parent=parent, response_dialog=response_dialog, recursive=True)
     else:
-        ai_thread = AIThread(provider, prompt_config, config["ai_config"], config["general"]["play_sound"])
+        ai_thread = AIThread(provider, provider_config, prompt_config, config["general"]["play_sound"])
         ai_thread.start()
         ai_thread.field_value_ready.connect(show_dialog)
 
@@ -210,11 +209,13 @@ def run_add_on(parent=None):
 
     def click_run_add_on(run_widget):
         provider = run_widget.provider_box.currentText()
+        provider_config = run_widget.provider_config
         prompt_config = run_widget.prompt_dict[run_widget.curr_prompt_name]
         prompt_config["query"] = run_widget.input_field_browse_query.text()
         run_widget.close()
         gen_response(
             provider,
+            provider_config,
             prompt_config,
             parent=parent
         )

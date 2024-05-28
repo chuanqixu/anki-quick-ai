@@ -6,6 +6,11 @@ from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLine
 
 from .prompt_window import PromptConfigDialog
 from ..ai.provider import providers
+from .provider import *
+from ..ankiaddonconfig import ConfigWindow, ConfigManager
+
+run_conf = ConfigManager()
+
 
 class RunDialog(QDialog):
     def __init__(self, parent=None):
@@ -22,8 +27,9 @@ class RunDialog(QDialog):
         self.default_provider = mw.addonManager.getConfig(__name__)["ai_config"]["default_provider"]
         self.prompt_dict = mw.addonManager.getConfig(__name__)["prompt"]
 
-        # reload last prompt name
+        # reload provider config
         provider_name = self.settings.value('ProviderName')
+        self.provider_config = run_conf.get("ai_config." + provider_name)
 
         # provider
         provider_layout = QHBoxLayout()
@@ -39,6 +45,13 @@ class RunDialog(QDialog):
         self.provider_box.currentIndexChanged.connect(self.provider_changed)
         self.curr_provider_name = self.provider_box.currentText()
         layout.addLayout(provider_layout)
+
+        # Configure Provider
+        self.provider_config_button = QPushButton("Configure Provider")
+        self.provider_config_button.clicked.connect(self.config_provider)
+        layout.addWidget(self.provider_config_button)
+
+        layout.addSpacing(20)
 
         # reload last prompt name
         prompt_name = self.settings.value('PromptName')
@@ -106,6 +119,34 @@ class RunDialog(QDialog):
 
     def provider_changed(self, index):
         self.curr_provider_name = self.provider_box.itemText(index)
+
+    def config_provider(self):
+        provider_config_dialog = QDialog(self)
+        config_window = ConfigWindow(run_conf)
+        config_window.on_open()
+        provider_layout = globals()["ai_config_layout_" + self.provider_box.currentText()](config_window, run_conf)
+        provider_config_dialog.setLayout(provider_layout)
+
+        button_layout = QHBoxLayout()
+        # save button
+        save_button = QPushButton("Save")
+        def save():
+            self.provider_config = config_window.conf._config["ai_config"][self.curr_provider_name]
+            provider_config_dialog.close()
+        save_button.clicked.connect(save)
+        save_button.setFixedSize(100, 40)  # set the size of the button
+        button_layout.addWidget(save_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
+
+        # Cancel button
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(provider_config_dialog.close)
+        cancel_button.setFixedSize(100, 40)  # set the size of the button
+        button_layout.addWidget(cancel_button, 0, Qt.AlignmentFlag.AlignCenter)  # align button to the center
+        provider_layout.addLayout(button_layout)
+
+        # raise Exception(provider_layout.config_window.conf._config)
+
+        provider_config_dialog.exec()
 
     def prompt_changed(self, index):
         self.curr_prompt_name = self.prompt_box.itemText(index)
