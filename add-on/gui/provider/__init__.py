@@ -1,6 +1,6 @@
 # Create a new config layout for a provider in the directory by name "ai_config_layout_{provider_name}.py"
 # Add to the beginning: from .ai_config_layout import AIConfigLayout
-# Define the class "AIConfigLayout{provider_name}" and inherit from PAIConfigLayout
+# Define the class "AIConfigLayout{provider_name}" and inherit from AIConfigLayout
 # Implement: advanced() if needed
 # Add arguments for the provider in meta.json: ai_config
 
