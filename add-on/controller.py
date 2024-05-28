@@ -8,6 +8,7 @@ import time
 import threading
 import shutil
 import json
+import copy
 
 from .anki import get_note_field_value_list, get_note_id_list, get_note_field_value_clean
 from .ai import call_llm, make_edge_tts_mp3
@@ -179,12 +180,14 @@ def gen_response(provider, provider_config, prompt_config, parent=None, response
         response_dialog.close()
 
     config = mw.addonManager.getConfig(__name__)
+    original_provider_config = copy.deepcopy(provider_config)
     prompt_config["prompt"] = format_prompt_list(prompt_config["prompt"], prompt_config["placeholder"], prompt_config["language"])
 
     def show_dialog(field_value_list):
         initial_text = field_value_html(field_value_list, "green")
         dialog = ResponseDialog(initial_text, ai_thread, parent)
-        dialog.regen_button.clicked.connect(lambda: gen_response(provider, prompt_config, parent, dialog))
+        provider_config = copy.deepcopy(original_provider_config)
+        dialog.regen_button.clicked.connect(lambda: gen_response(provider, provider_config, prompt_config, parent, dialog))
         dialog.setModal(False)
         dialog.show()
 

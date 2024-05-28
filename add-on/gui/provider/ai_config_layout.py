@@ -24,7 +24,7 @@ class AIConfigLayout(ConfigLayout):
         return self.prefix + key
 
     def basic(self):
-        default_api_key = self.default_conf.get(self.prefix + "api_key")
+        default_api_key = self.conf.get(self.prefix + "api_key")
         api_key_text_input = self.text_input(
             self.prefix + "api_key",
             "API Key:"
@@ -46,6 +46,7 @@ class AIConfigLayout(ConfigLayout):
             tooltip="Default is gpt-3.5-turbo",
             append_updates=False
         )
+        model_combo.setCurrentText(self.conf.get(self.prefix + "model"))
 
         def update_model(api_key):
             try:

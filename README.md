@@ -108,4 +108,4 @@ Thanks for [BlueGreenMagick/ankiaddonconfig](https://github.com/BlueGreenMagick/
 
 Thanks for @marquiswang. It is now ported to Anki 23.10.
 
-Thanks for @Zulivan for developing Groq and Agentic behaviors
+Thanks to @Zulivan for developing Groq and Agentic behaviors.

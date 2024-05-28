@@ -8,8 +8,8 @@ from .prompt_window import PromptConfigDialog
 from ..ai.provider import providers
 from .provider import *
 from ..ankiaddonconfig import ConfigWindow, ConfigManager
-
-run_conf = ConfigManager()
+from .config_window import conf
+from copy import deepcopy
 
 
 class RunDialog(QDialog):
@@ -29,7 +29,7 @@ class RunDialog(QDialog):
 
         # reload provider config
         provider_name = self.settings.value('ProviderName')
-        self.provider_config = run_conf.get("ai_config." + provider_name)
+        self.provider_config = conf.get("ai_config." + provider_name)
 
         # provider
         provider_layout = QHBoxLayout()
@@ -122,6 +122,10 @@ class RunDialog(QDialog):
 
     def config_provider(self):
         provider_config_dialog = QDialog(self)
+        try:
+            run_conf = deepcopy(conf)
+        except:
+            run_conf = ConfigManager()
         config_window = ConfigWindow(run_conf)
         config_window.on_open()
         provider_layout = globals()["ai_config_layout_" + self.provider_box.currentText()](config_window, run_conf)
