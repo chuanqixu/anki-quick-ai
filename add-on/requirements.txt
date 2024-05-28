@@ -2,5 +2,5 @@ openai
 groq==0.5.0
 edge-tts
 iso639
-pydantic==1.10.12
+pydantic==1.10.13
 httpx==0.24.0
