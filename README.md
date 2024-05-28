@@ -94,3 +94,5 @@ Thanks for the inspiration and code in [yihong0618/duolingo_remember](https://gi
 Thanks for [BlueGreenMagick/ankiaddonconfig](https://github.com/BlueGreenMagick/ankiaddonconfig) for configuration window.
 
 Thanks for @marquiswang. It is now ported to Anki 23.10.
+
+Thanks for @Zulivan for developing Groq and Agentic behaviors
