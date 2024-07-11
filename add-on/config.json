@@ -50,30 +50,6 @@
             "English"
          ],
          "agentic_behavior":false
-      },
-      "Japanese card improver":{
-         "default_query":"deck:Review",
-         "note_field":{
-            "Educational":[
-               "Japanese",
-               "Context",
-               "Furigana",
-               "Translation",
-               "Breakdown",
-               "Pedagogy"
-            ]
-         },
-         "system_prompt":"You're an experienced Japanese language teacher who uses Anki App to help students learn Japanese. You're dedicated to creating exceptional flashcards that users remember easily for Anki App. Your goal is to generate high-quality flashcards with accurate content for each field in the note.",
-         "prompt":[
-            "Here is the content for each field in the note so far: #field_value# Japanese field should only contain the word using Kanji. Furigna field should contain the Japanese word with the pronunciation annotation on top. Context field should specify the context of the word. Pedagogy field should be a list of basic and easy example sentences that focus on the sentence in Japanese with English translation. Breakdown field should be the explanation of each component of the word. You mustn't leave any field empty. You're expected to improve coherence of the content in the note. You must do your best to provide accurate information for each field in the note. Output is JSON, featuring HTML content tailored to Anki's requirements as follows: #json_fields#"
-         ],
-         "placeholder":{
-            
-         },
-         "language":[
-            "English"
-         ],
-         "agentic_behavior":true
       }
    }
 }

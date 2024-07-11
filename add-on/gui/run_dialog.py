@@ -28,7 +28,7 @@ class RunDialog(QDialog):
         self.prompt_dict = mw.addonManager.getConfig(__name__)["prompt"]
 
         # reload provider config
-        provider_name = self.settings.value('ProviderName')
+        provider_name = self.settings.value('ProviderName', self.default_provider)
         self.provider_config = conf.get("ai_config." + provider_name)
 
         # provider
@@ -37,10 +37,7 @@ class RunDialog(QDialog):
         provider_layout.addWidget(provider_label)
         self.provider_box = QComboBox(self)
         self.provider_box.addItems(providers)
-        if provider_name:
-            self.provider_box.setCurrentText(provider_name)
-        else:
-            self.provider_box.setCurrentText(self.default_provider)
+        self.provider_box.setCurrentText(provider_name)
         provider_layout.addWidget(self.provider_box)
         self.provider_box.currentIndexChanged.connect(self.provider_changed)
         self.curr_provider_name = self.provider_box.currentText()
@@ -159,7 +156,7 @@ class RunDialog(QDialog):
         prompt_config_dialog = PromptConfigDialog(config_data=self.prompt_dict[self.curr_prompt_name], in_run_dialog=True)
         prompt_config_dialog.exec()
         if prompt_config_dialog.is_changed:
-            self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.prompt_config_data
+            self.prompt_dict[self.curr_prompt_name] = prompt_config_dialog.config_data
 
     def closeEvent(self, event):
         self.settings.setValue('ProviderName', self.curr_provider_name)

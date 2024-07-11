@@ -4,6 +4,13 @@
 
 **Please go to the add-on configuration page and click "Restore Defaults". Sorry for the inconvenience!**
 
+### Version **1.0.9.1** 2024-07-10
+
+Fixed
+
+* No provider name in QSettings when first running the add-on.
+* Error when change the prompt in the run dialog.
+
 ### Version **1.0.9** 2024-04-28
 
 (In this update, changes have been made to the structure of the configuration file)
